@@ -24,3 +24,11 @@ execute:
 bibliography: references.bib  
 csl: apa7.csl  
 ---
+
+# Title: 
+
+## Introduction:
+
+**Research Question**
+
+Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?
