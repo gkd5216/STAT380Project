@@ -1,0 +1,26 @@
+---
+title: "Project Report"
+subtitle: "STAT 380 Section 004"
+author: "Gianna DeLorenzo & Melissa Kim"
+format:
+  pdf:
+    toc: FALSE
+    number-sections: TRUE
+    number-depth: 5
+    fig-align: center
+    cap-location: top
+    geometry:
+      - top=1in
+      - left=1in
+      - right=1in
+      - bottom=1in
+    colorlinks: TRUE
+execute:
+  echo: FALSE
+  warning: FALSE
+  cache: TRUE
+  message: FALSE
+
+bibliography: references.bib  
+csl: apa7.csl  
+---
