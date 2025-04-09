@@ -25,10 +25,27 @@ bibliography: references.bib
 csl: apa7.csl  
 ---
 
-# Title: 
+# Title:
 
-## Introduction:
+## Introduction
 
 **Research Question**
 
-Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?
+**Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?**
+
+## Exploratory Data Analysis
+
+### Variable Description
+
+### Data Visualization
+
+## Modeling
+
+## Discussion
+
+## References
+
+# Code Appendix
+
+```{r codeAppend, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
