@@ -37,6 +37,8 @@ csl: apa7.csl
 
 ### Variable Description
 
+The response variable of interest is the ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**.
+
 ### Data Visualization
 
 ## Modeling
