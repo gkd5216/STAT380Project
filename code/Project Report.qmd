@@ -29,9 +29,15 @@ csl: apa7.csl
 
 ## Introduction
 
+Patient experiences with medications is crucial when it comes to the healthcare domain by providing insights on the side effects, drug effectiveness, and overall satisfaction.
+
 **Research Question**
 
+In this report, we will be exploring the following research question:
+
 **Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?**
+
+This research question
 
 ## Exploratory Data Analysis
 
@@ -40,6 +46,55 @@ csl: apa7.csl
 The response variable of interest is the ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**.
 
 ### Data Visualization
+
+```{r echo=FALSE, message=FALSE}
+#| label: Table1
+#| fig-cap: "Table 1"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Table showing Variables"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 1"
+
+#Load necessary libraries
+library(dplyr) #data manipulation
+library(knitr) #table formats
+library(readr) 
+library(kableExtra)
+
+#Import UC Irvine test csv file. (Initial Definition for All Code)
+drug_train <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv"))
+drug_test <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTrain_raw.tsv"))
+
+
+# Summary Statistics grouping by Geographic Area.
+variable_analysis <- data.frame(
+  Variable = c("reviewID", "urlDrugName", "rating", "effectiveness", "sideEffects", "condition", "benefitsReview", 
+               "sideEffectsReview", "commentsReview"),
+  Type = c("Integer", "Categorial", "Integer", "Categorical", "Categorical", "Categorical", 
+           "Categorical", "Categorical", "Categorical"),
+  Explanation = c(
+    "Review ID",
+    "Name of drug",
+    "Name of condition",
+    "Patient on benefits",
+    "Patient on side effects",
+    "Overall patient comment",
+    "10 star patient rating",
+    "5 step side effect rating",
+    "5 step effectiveness rating"
+  )
+)
+  
+# Outputs Formatted Summary Table with Kable Styling tools
+kable(
+  variable_analysis,
+  caption = "Table 1: Variables used in Analysis"
+  )
+
+```
 
 ## Modeling
 
