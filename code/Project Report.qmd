@@ -68,7 +68,6 @@ library(kableExtra)
 drug_train <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv"))
 drug_test <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTrain_raw.tsv"))
 
-
 # Summary Statistics grouping by Geographic Area.
 variable_analysis <- data.frame(
   Variable = c("reviewID", "urlDrugName", "rating", "effectiveness", "sideEffects", "condition", "benefitsReview", 
@@ -93,6 +92,13 @@ kable(
   variable_analysis,
   caption = "Table 1: Variables used in Analysis"
   )
+
+```
+
+### Data Cleaning
+
+```{r}
+glimpse(drug_train)
 
 ```
 
