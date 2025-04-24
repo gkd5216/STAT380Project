@@ -90,7 +90,7 @@ variable_analysis <- data.frame(
 # Outputs Formatted Summary Table with Kable Styling tools
 kable(
   variable_analysis,
-  caption = "Table 1: Variables used in Analysis"
+  caption = "Variables used in Analysis"
   )
 
 ```
