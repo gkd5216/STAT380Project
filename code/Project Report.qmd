@@ -63,6 +63,8 @@ library(dplyr) #data manipulation
 library(knitr) #table formats
 library(readr) 
 library(kableExtra)
+library(caret)
+library(forcats)
 
 #Import UC Irvine test csv file. (Initial Definition for All Code)
 drug_train <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv"))
@@ -126,6 +128,58 @@ tidy_drug_train
 ```
 
 ## Modeling
+
+### Logistic Regression: Predicting Positive vs. Negative Reviews
+
+```{r}
+# Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
+
+drug_train <- drug_train %>%
+  mutate(sentiment = ifelse(rating >= 7, 1, 0))
+
+drug_test <- drug_test %>%
+  mutate(sentiment = ifelse(rating >= 7, 1, 0))
+
+drug_train <- drug_train %>%
+  mutate(across(c(urlDrugName, condition, effectiveness), as.factor))
+
+drug_test <- drug_test %>%
+  mutate(across(c(urlDrugName, condition, effectiveness), as.factor))
+
+drug_train <- drug_train %>%
+  mutate(urlDrugName = fct_lump(urlDrugName, n = 20),
+         condition = fct_lump(condition, n = 20),
+         effectiveness = fct_lump(effectiveness, n = 5))
+
+# Match levels in test data to training data
+drug_test <- drug_test %>%
+  mutate(urlDrugName = fct_lump(urlDrugName, n = 20),
+         condition = fct_lump(condition, n = 20),
+         effectiveness = fct_lump(effectiveness, n = 5))
+
+# Align factor levels
+drug_test$urlDrugName <- factor(drug_test$urlDrugName, levels = levels(drug_train$urlDrugName))
+
+drug_test$condition <- factor(drug_test$condition, levels = levels(drug_train$condition))
+drug_test$effectiveness <- factor(drug_test$effectiveness, levels = levels(drug_train$effectiveness))
+
+# Remove rows with NAs
+test_data_clean <- drug_test %>%
+  filter(!is.na(urlDrugName) & !is.na(condition) & !is.na(effectiveness))
+
+# Logistic regression model
+logit_model <- glm(sentiment ~ urlDrugName + condition + effectiveness,
+                   data = drug_train, family = "binomial")
+
+# Predict on clean test data
+test_pred <- predict(logit_model, newdata = test_data_clean, type = "response")
+test_pred_class <- ifelse(test_pred > 0.5, 1, 0)
+
+# Confusion matrix
+confusionMatrix(factor(test_pred_class), factor(test_data_clean$sentiment))
+
+
+```
 
 ## Discussion
 
