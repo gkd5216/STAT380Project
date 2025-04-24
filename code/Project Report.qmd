@@ -128,10 +128,6 @@ tidy_drug_train <- drug_train %>%
 tidy_drug_train
 ```
 
-
-
-
-
 ## Modeling
 
 ### Logistic Regression: Predicting Positive vs. Negative Reviews
@@ -187,7 +183,38 @@ confusionMatrix(factor(test_pred_class), factor(test_data_clean$sentiment))
 
 ```
 
+Confusion Matrix 0 = negative review, 1 = positive review
+
+True Negatives (TN) = 212 212 reviews were predicted negative and actually negative
+
+False Positives (FP) = 107 107 reviews were predicted positive but actually negative
+
+False Negatives (FN) = 48 48 reviews were predicted negative but actually positive
+
+True Positives (TP) = 537 537 reviews were predicted positive and actually positive
+
+| Metric | Value | Meaning |
+|---------------|------------|-----------------------------|
+| Accuracy | 0.8285 | 82.85% of predictions were correct overall |
+| Sensitivity (Class 0) | 0.6646 | 66.46% of actual negative reviews were correctly identified |
+| Specificity (Class 1) | 0.9179 | 91.79% of actual positive reviews were correctly identified |
+| Kappa | 0.6081 | Moderate to strong agreement beyond chance, follows within the “good” range of 0.6-0.8 |
+| Precision (class 0) | 0.8154 | Out of all predicted negative reviews, 81.54% were correct |
+| Negative Predictive Value | 0.8339 | Out of all predicted positive reviews, 83.39% were correct |
+| Balanced Accuracy | 0.7913 | Average of sensitivity and specificity; useful for imbalanced classes |
+| No Information Rate (NIR) | 0.6471 | 64.71% of reviews in the test set are in the majority class (positive); always guessing the majority class (positive) would be correct 64.71% of the time |
+| McNemar’s Test | p = 3.183e-06 | Suggests a significant difference in types of errors; model is not just guessing randomly |
+
+***Model Strengths:***  - High accuracy (82.9%) - Excellent at identifying positive reviews (specificity = 91.8%) - High precision for negative class (precision = 81.5%), so false alarms are limited - Performs much better than guessing the majority class (accuracy \> NIR)
+
+***Model Weaknesses:***  - Struggles more with detecting negative reviews (sensitivity = 66.5%), misses about 1 in 3 negative reviews
+
+***Conclusion*** The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment.
+
+***Answer to “Can we predict if a patient’s review is positive or negative based on their feedback?”*** Yes, we can predict whether a patient’s review is positive or negative using machine learning. Our logistic regression model, trained on features such as the drug name, medical condition, and reported effectiveness, achieved an overall accuracy of 82.85%, which was much higher than the no-information rate of 64.71%. The model showed strong performance in identifying positive reviews (specificity = 91.8%) and reasonably good performance for negative reviews (sensitivity = 66.5%). These results indicate that the model can reliably classify overall patient sentiment based on the structured data.
+
 ### Neutral Network: Predicting Ratings with Nuance
+
 Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
 
 ```{r}
@@ -230,8 +257,9 @@ confusionMatrix(nn_pred, valid_rating)
 
 ```
 
-
 ### KNN (K-Nearest Neighbors)
+
+Can we classify the sentiment of a new review based on sentiments of similar past reviews?
 
 ### K-means Clustering
 
