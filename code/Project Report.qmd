@@ -65,6 +65,7 @@ library(readr)
 library(kableExtra)
 library(caret)
 library(forcats)
+library(nnet)
 
 #Import UC Irvine test csv file. (Initial Definition for All Code)
 drug_train <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv"))
@@ -127,9 +128,15 @@ tidy_drug_train <- drug_train %>%
 tidy_drug_train
 ```
 
+
+
+
+
 ## Modeling
 
 ### Logistic Regression: Predicting Positive vs. Negative Reviews
+
+Can we predict if a patient’s review is positive or negative based on their feedback?
 
 ```{r}
 # Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
@@ -178,8 +185,55 @@ test_pred_class <- ifelse(test_pred > 0.5, 1, 0)
 # Confusion matrix
 confusionMatrix(factor(test_pred_class), factor(test_data_clean$sentiment))
 
+```
+
+### Neutral Network: Predicting Ratings with Nuance
+Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
+
+```{r}
+# Drop NAs
+drug_train <- drug_train %>%
+  select(rating, urlDrugName, condition, effectiveness) %>%
+  drop_na()
+
+# Treat rating as factor
+drug_train$rating <- as.factor(drug_train$rating)
+
+drug_train <- drug_train %>%
+  mutate(
+    urlDrugName = fct_lump(urlDrugName, n = 20),
+    condition = fct_lump(condition, n = 20),
+    effectiveness = fct_lump(effectiveness, n = 5)
+  )
+
+# Split into training and validation sets
+set.seed(42)
+split_index <- createDataPartition(drug_train$rating, p = 0.8, list = FALSE)
+train_set <- drug_train[split_index, ]
+valid_set <- drug_train[-split_index, ]
+
+# Train the neural network model
+nn_model <- nnet(rating ~ urlDrugName + condition + effectiveness,
+                 data = train_set,
+                 size = 5,
+                 maxit = 200,
+                 trace = FALSE)
+
+# Predict on validation set
+nn_pred <- predict(nn_model, newdata = valid_set, type = "class")
+
+nn_pred <- factor(nn_pred, levels = levels(valid_set$rating))
+valid_rating <- factor(valid_set$rating, levels = levels(valid_set$rating))
+
+# Evaluate model
+confusionMatrix(nn_pred, valid_rating)
 
 ```
+
+
+### KNN (K-Nearest Neighbors)
+
+### K-means Clustering
 
 ## Discussion
 
