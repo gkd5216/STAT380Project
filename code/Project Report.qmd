@@ -97,9 +97,32 @@ kable(
 
 ### Data Cleaning
 
-```{r}
+This glimpse of the Drug Reviews train data displays a dataset in need of being cleaned and tidied. 
+
+```{r, message=FALSE}
+library(tidyverse)
+library(janitor)
 glimpse(drug_train)
 
+```
+
+```{r}
+tidy_drug_train <- drug_train %>%
+  rename(id = `...1`) %>% #Renames ID column
+  clean_names() %>%
+  mutate(
+    rating = as.numeric(rating),                # Ensure numeric
+    effectiveness = as.factor(effectiveness),   # Treat as ordinal later if needed
+    side_effects = as.factor(side_effects),
+    condition = str_to_title(condition),        # Title case for condition
+    drug_name = str_to_title(url_drug_name),    # Clean drug name
+    full_review = paste(benefits_review, side_effects_review, comments_review, sep = " ") %>%
+      str_squish()                              # Collapse and trim whitespace
+  ) %>%
+  select(id, drug_name, condition, rating, effectiveness, side_effects, full_review) %>% 
+  filter(!is.na(rating), !is.na(condition), condition != "")
+
+tidy_drug_train
 ```
 
 ## Modeling
