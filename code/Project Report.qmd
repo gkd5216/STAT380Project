@@ -261,7 +261,16 @@ confusionMatrix(nn_pred, valid_rating)
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
 
+```{r}
+
+```
+
+
 ### K-means Clustering
+
+```{r}
+
+```
 
 ## Discussion
 
