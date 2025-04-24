@@ -97,7 +97,7 @@ kable(
 
 ### Data Cleaning
 
-This glimpse of the Drug Reviews train data displays a dataset in need of being cleaned and tidied. 
+This glimpse of the Drug Reviews train data displays a dataset in need of being cleaned and tidied.
 
 ```{r, message=FALSE}
 library(tidyverse)
