@@ -98,6 +98,16 @@ kable(
 
 ```
 
+```{r}
+ggplot(drug_train, aes(x = rating)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Patient Ratings", x = "Rating (1-10)", y = "Number of Reviews")
+
+ggplot(drug_test, aes(x = rating)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Patient Ratings", x = "Rating (1-10)", y = "Number of Reviews")
+```
+  
 ### Data Cleaning
 
 This glimpse of the Drug Reviews train data displays a dataset in need of being cleaned and tidied.
