@@ -328,32 +328,108 @@ drug_train <- drug_train_tsv %>%
   mutate(
     rating = as.numeric(rating),
     sentiment = ifelse(rating >= 7, "Positive", "Negative")
-  ) 
+    ) %>%
+  drop_na(rating)
 
 drug_test <- drug_test_tsv %>%
   mutate(
     rating = as.numeric(rating),
     sentiment = ifelse(rating >= 7, "Positive", "Negative")
-  ) 
+    ) %>%
+  drop_na(rating)
 
-#KNN Classifier
-xvars <- c('rating')
-drug_train[, xvars] <- scale(drug_train[, xvars])
-drug_test[, xvars] <- scale(drug_test[, xvars])
+#Top 5 drug names and conditions
+top_drugs <- drug_train %>%
+  count(urlDrugName, sort = TRUE) %>%
+  slice_head(n = 5) %>%
+  pull(urlDrugName)
+
+top_conditions <- drug_train %>%
+  count(condition, sort = TRUE) %>%
+  slice_head(n = 5) %>%
+  pull(condition)
+
+#Create dummy variables
+drug_train <- drug_train %>%
+  mutate(
+    drug_top = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
+    condition_top = ifelse(condition %in% top_conditions, condition, "Other")
+  ) %>%
+  mutate(
+    across(c(drug_top, condition_top), ~ as.factor(.))
+  )
+
+drug_test <- drug_test %>%
+  mutate(
+    drug_top = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
+    condition_top = ifelse(condition %in% top_conditions, condition, "Other")
+  ) %>%
+  mutate(
+    across(c(drug_top, condition_top), ~ as.factor(.))
+  )
+
+#One-hot encode for drug_top and condition_top
+drug_train_encode <- model.matrix(~ drug_top + condition_top - 1, data = drug_train)
+drug_test_encode <- model.matrix(~ drug_top + condition_top - 1, data = drug_test)
+
+#Scaling
+drug_train$rating <- scale(drug_train$rating)
+drug_test$rating <- scale(drug_test$rating)
+
+#Final predictors matrix
+train_predictors <- cbind(drug_train$rating, drug_train_encode)
+test_predictors <- cbind(drug_test$rating, drug_test_encode)
+
 train_labels <- factor(drug_train$sentiment)
 test_labels <- factor(drug_test$sentiment)
 
-knn_pred <- knn(train = drug_train[, xvars], 
-               test = drug_test[, xvars], 
-               cl = train_labels, 
-               k = 5)
+#KNN Cross-Validation
+knn_control <- trainControl(method = "cv", number = 10)
 
-confusionMatrix(knn_pred, test_labels)
+knn_cv <- train(
+  x = as.data.frame(train_predictors),
+  y = train_labels,
+  method = "knn",
+  trControl = knn_control,
+  tuneGrid = expand.grid(k = 1:20)
+)
+
+plot(knn_cv)
+```
+
+```{r, warning=FALSE}
+knn_predictions <- knn(
+  train = train_predictors,
+  test = test_predictors,
+  cl = train_labels,
+  k = knn_cv$bestTune$k
+)
+
+#Confusion matrix with KNN Predictions
+confusionMatrix(knn_predictions, test_labels)
+
 ```
 
 ### K-means Clustering
 
 ```{r}
+library(ggplot2)
+library(factoextra)
+set.seed(123)
+
+drug_kmeans <- drug_train_tsv %>%
+  mutate(rating = as.numeric(rating)) %>%
+  drop_na(rating) %>%
+  select(rating)
+
+# perform kmeans clustering (k = 5 clusters)
+kmeans_res <- kmeans(drug_kmeans, centers = 5, nstart = 20)
+drug_KMeanClusters <- kmeans_res$cluster
+drug_kmeans$cluster <- as.factor(drug_KMeanClusters)
+
+#Plot k-means clustering
+set.seed(123)
+plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k means')
 
 ```
 
