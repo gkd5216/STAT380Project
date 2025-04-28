@@ -412,7 +412,7 @@ confusionMatrix(knn_predictions, test_labels)
 
 ### K-means Clustering
 
-```{r}
+```{r, message=FALSE}
 library(ggplot2)
 library(factoextra)
 set.seed(123)
@@ -430,7 +430,10 @@ drug_kmeans$cluster <- as.factor(drug_KMeanClusters)
 #Plot k-means clustering
 set.seed(123)
 plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k means')
+```
 
+```{r}
+table(drug_kmeans)
 ```
 
 ## Discussion
