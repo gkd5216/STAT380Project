@@ -45,6 +45,26 @@ This research question
 
 The response variable of interest is the ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**.
 
+An example of a high review's (Rating = 10) textual review includes the following:
+
+-   **urlDrugName**: Xanax
+-   **Rating**: 10
+-   **benefitsReview**: This simply just works fast and without any of the nasty side effects of SSRI medicines...
+-   **sideEffectsReview**: I really don't have any side effects other than the mild but very tolerable issue of taking it 4-5 times a day which isn't an effect but just the way you need to take this...
+-   **commentsReview**: I first started taking this at 3 times per day with .25 mg pills. I was advised not to take as needed with my panic attacks as that would reinforce the idea of taking a pill when it's needed and not help me work around my anxiety...
+
+An example of a low review's (Rating = 1) textual review includes the following:
+
+-   **urlDrugName**: Claritin
+
+-   **Rating**: 1
+
+-   **benefitsReview**: None - did nothing to help allergies. I just had a dryer, more painful version of my allergies with new allergies/irritations developing on top of my original ones...
+
+-   **sideEffectsReview**: I had some horrifying mental and physical side effects. ruined a year of my life. read this - it mentions everything I dealt with: http://www.askapatient.com/viewrating.aspdrug=19658&name=CLARITIN
+
+-   **commentsReview**: Took one 10 mg pill nightly.
+
 ### Data Visualization
 
 ```{r echo=FALSE, message=FALSE}
