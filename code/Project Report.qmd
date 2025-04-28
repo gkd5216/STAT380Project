@@ -66,10 +66,14 @@ library(kableExtra)
 library(caret)
 library(forcats)
 library(nnet)
+library(kknn)
+library(tidyr)
+library(broom)
+library(ggcorrplot)
 
 #Import UC Irvine test csv file. (Initial Definition for All Code)
-drug_train <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv"))
-drug_test <- read_tsv(url("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTrain_raw.tsv"))
+drug_train_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv")
+drug_test_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTrain_raw.tsv")
 
 # Summary Statistics grouping by Geographic Area.
 variable_analysis <- data.frame(
@@ -99,44 +103,40 @@ kable(
 ```
 
 ```{r}
-ggplot(drug_train, aes(x = rating)) +
+ggplot(drug_train_tsv, aes(x = rating)) +
   geom_histogram(binwidth = 1, fill = "blue", color = "black") +
   labs(title = "Distribution of Patient Ratings (Train)", x = "Rating (1-10)", y = "Number of Reviews")
 
-ggplot(drug_test, aes(x = rating)) +
+ggplot(drug_test_tsv, aes(x = rating)) +
   geom_histogram(binwidth = 1, fill = "blue", color = "black") +
   labs(title = "Distribution of Patient Ratings (Test)", x = "Rating (1-10)", y = "Number of Reviews")
 ```
-  
+
 ### Data Cleaning
 
-This glimpse of the Drug Reviews train data displays a dataset in need of being cleaned and tidied.
+This glimpse of the Drug Reviews train and test data displays a dataset in need of being cleaned and tidied.
 
 ```{r, message=FALSE}
 library(tidyverse)
 library(janitor)
-glimpse(drug_train)
+glimpse(drug_train_tsv)
+glimpse(drug_test_tsv)
 
 ```
 
 ```{r}
-tidy_drug_train <- drug_train %>%
-  rename(id = `...1`) %>% #Renames ID column
-  clean_names() %>%
-  mutate(
-    rating = as.numeric(rating),                # Ensure numeric
-    effectiveness = as.factor(effectiveness),   # Treat as ordinal later if needed
-    side_effects = as.factor(side_effects),
-    condition = str_to_title(condition),        # Title case for condition
-    drug_name = str_to_title(url_drug_name),    # Clean drug name
-    full_review = paste(benefits_review, side_effects_review, comments_review, sep = " ") %>%
-      str_squish()                              # Collapse and trim whitespace
-  ) %>%
-  select(id, drug_name, condition, rating, effectiveness, side_effects, full_review) %>% 
-  filter(!is.na(rating), !is.na(condition), condition != "")
 
-tidy_drug_train
+#Tidied drug train
+#drug_train <- drug_train %>%
+  #clean_names() 
+
+#Tidied drug test
+#drug_test <- drug_test %>%
+  #clean_names()
+
 ```
+
+We tidied the Drug Reviews Train and Test datasets by cleaning up the names with the Janitor library.
 
 ## Modeling
 
@@ -144,13 +144,13 @@ tidy_drug_train
 
 Can we predict if a patient’s review is positive or negative based on their feedback?
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
 
-drug_train <- drug_train %>%
+drug_train <- drug_train_tsv %>%
   mutate(sentiment = ifelse(rating >= 7, 1, 0))
 
-drug_test <- drug_test %>%
+drug_test <- drug_test_tsv %>%
   mutate(sentiment = ifelse(rating >= 7, 1, 0))
 
 drug_train <- drug_train %>%
@@ -172,7 +172,6 @@ drug_test <- drug_test %>%
 
 # Align factor levels
 drug_test$urlDrugName <- factor(drug_test$urlDrugName, levels = levels(drug_train$urlDrugName))
-
 drug_test$condition <- factor(drug_test$condition, levels = levels(drug_train$condition))
 drug_test$effectiveness <- factor(drug_test$effectiveness, levels = levels(drug_train$effectiveness))
 
@@ -204,7 +203,7 @@ False Negatives (FN) = 48 48 reviews were predicted negative but actually positi
 True Positives (TP) = 537 537 reviews were predicted positive and actually positive
 
 | Metric | Value | Meaning |
-|---------------|------------|-----------------------------|
+|--------------------|-------------------|---------------------------------|
 | Accuracy | 0.8285 | 82.85% of predictions were correct overall |
 | Sensitivity (Class 0) | 0.6646 | 66.46% of actual negative reviews were correctly identified |
 | Specificity (Class 1) | 0.9179 | 91.79% of actual positive reviews were correctly identified |
@@ -215,9 +214,9 @@ True Positives (TP) = 537 537 reviews were predicted positive and actually posit
 | No Information Rate (NIR) | 0.6471 | 64.71% of reviews in the test set are in the majority class (positive); always guessing the majority class (positive) would be correct 64.71% of the time |
 | McNemar’s Test | p = 3.183e-06 | Suggests a significant difference in types of errors; model is not just guessing randomly |
 
-***Model Strengths:***  - High accuracy (82.9%) - Excellent at identifying positive reviews (specificity = 91.8%) - High precision for negative class (precision = 81.5%), so false alarms are limited - Performs much better than guessing the majority class (accuracy \> NIR)
+***Model Strengths:*** - High accuracy (82.9%) - Excellent at identifying positive reviews (specificity = 91.8%) - High precision for negative class (precision = 81.5%), so false alarms are limited - Performs much better than guessing the majority class (accuracy \> NIR)
 
-***Model Weaknesses:***  - Struggles more with detecting negative reviews (sensitivity = 66.5%), misses about 1 in 3 negative reviews
+***Model Weaknesses:*** - Struggles more with detecting negative reviews (sensitivity = 66.5%), misses about 1 in 3 negative reviews
 
 ***Conclusion*** The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment.
 
@@ -229,7 +228,7 @@ Can we predict a more nuanced outcome of the review based on patient attributes,
 
 ```{r}
 # Drop NAs
-drug_train <- drug_train %>%
+drug_train <- drug_train_tsv %>%
   select(rating, urlDrugName, condition, effectiveness) %>%
   drop_na()
 
@@ -267,14 +266,90 @@ confusionMatrix(nn_pred, valid_rating)
 
 ```
 
+#### Interpretation
+
+##### Class-by-Class Breakdown
+
+| Class | Sensitivity | Precision | Balanced Accuracy |
+|-------|-------------|-----------|-------------------|
+| 1     | 50.8%       | 64.6%     | 73.9%             |
+| 2     | 0%          | NaN       | 50.0%             |
+| 3     | 13.8%       | 12.9%     | 54.6%             |
+| 4     | 9.5%        | 50.0%     | 54.6%             |
+| 5     | 0%          | 0%        | 49.8%             |
+| 6     | 3.2%        | 7.7%      | 50.6%             |
+| 7     | 27.1%       | 24.4%     | 58.2%             |
+| 8     | 48.6%       | 35.3%     | 64.6%             |
+| 9     | 2.1%        | 7.4%      | 48.6%             |
+| 10    | 89.9%       | 50.8%     | 81.2%             |
+
+##### Overall Model Performance
+
+**Accuracy**: 0.3981
+
+-   The model correctly predicted the exact rating about 40% of the time.
+
+**No Information Rate (NIR)**: 0.2395
+
+-   Always guessing the most common rating (10) would be correct about 24% of the time.
+
+**P-value (Accuracy \> NIR)**: \< 2.2e-16
+
+-   The model significantly outperforms random guessing or defaulting to the majority class.
+
+**Kappa**: 0.2672
+
+-   This indicates fair agreement beyond chance; falls within 0.2-0.4 range.
+
+##### Model Strengths
+
+-   Performs best on class 10, the most common rating (recall = 89.9%)
+
+-   Moderate sensitivity for Classes 1 and 8, meaning the model is able to detect some negative (1) and mid-range (8) ratings well
+
+##### Model Weaknesses
+
+-   Struggles with middle ratings (2-6), very low recall and precision
+
+-   Leans heavily towards the most frequent classes, possibly due to class imbalance within the dataset
+
+The neutral network model achieves moderate overall accuracy (39.8%) and significantly outperforms baseline guessing. However, it shows a strong bias towards frequent ratings like 10, while struggling to accurately detect rare or mid-range ratings (2-6). Future work or revisions should address the class imbalance to improve performance across all review scores.
+
 ### KNN (K-Nearest Neighbors)
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
 
-```{r}
+```{r, message=FALSE}
+library(FNN)
+set.seed(123)
 
+#Turns categorial variables into numeric variables for computation
+drug_train <- drug_train_tsv %>%
+  mutate(
+    rating = as.numeric(rating),
+    sentiment = ifelse(rating >= 7, "Positive", "Negative")
+  ) 
+
+drug_test <- drug_test_tsv %>%
+  mutate(
+    rating = as.numeric(rating),
+    sentiment = ifelse(rating >= 7, "Positive", "Negative")
+  ) 
+
+#KNN Classifier
+xvars <- c('rating')
+drug_train[, xvars] <- scale(drug_train[, xvars])
+drug_test[, xvars] <- scale(drug_test[, xvars])
+train_labels <- factor(drug_train$sentiment)
+test_labels <- factor(drug_test$sentiment)
+
+knn_pred <- knn(train = drug_train[, xvars], 
+               test = drug_test[, xvars], 
+               cl = train_labels, 
+               k = 5)
+
+confusionMatrix(knn_pred, test_labels)
 ```
-
 
 ### K-means Clustering
 
