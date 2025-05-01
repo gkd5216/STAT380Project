@@ -339,6 +339,8 @@ The neutral network model achieves moderate overall accuracy (39.8%) and signifi
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
 
+#### KNN Hyperparameter Tuning
+
 ```{r, message=FALSE}
 library(FNN)
 set.seed(123)
@@ -351,15 +353,40 @@ drug_train <- drug_train_tsv %>%
     ) %>%
   drop_na(rating)
 
-drug_test <- drug_test_tsv %>%
-  mutate(
-    rating = as.numeric(rating),
-    sentiment = ifelse(rating >= 7, "Positive", "Negative")
-    ) %>%
-  drop_na(rating)
+train_labels <- factor(drug_train$sentiment)
+knn_control <- trainControl(method = "cv", number = 10)
+knn_pred <- predict(drug_train, newdata = train_labels, type = "class")
 
-
+#Cross Validation
+knn_cv <- train(
+  x = as.data.frame(train_predictors),
+  y = train_labels, 
+  method = "knn", 
+  trControl = knn_control, 
+  tuneGrid = expand.grid(k = 1:20) 
+  )
+plot(knn_cv)
 ```
+
+#### KNN Classification
+
+```{r}
+plot_data_sentiment <- drug_train %>%
+  select(rating, ...1, sentiment) %>%
+  rename(patientID = ...1) %>% 
+  drop_na()
+
+ggplot(data = plot_data_sentiment, aes(x = rating, 
+                                       y = patientID, 
+                                       color = sentiment)) +
+  geom_point(alpha = 0.6) +
+  labs(title = "Patient Reviews by Rating and Feature", 
+       x = "Patient Rating (1-10)", 
+       y = "Patient ID",
+       color = "Sentiment") + 
+  theme_minimal()
+```
+
 
 #### Interpretation
 
@@ -410,6 +437,13 @@ plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k 
 ```{r}
 table(drug_kmeans)
 ```
+
+#### Interpretation
+
+##### Model Strengths
+
+##### Model Weaknesses
+
 
 ## Discussion
 
