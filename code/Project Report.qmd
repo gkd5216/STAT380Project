@@ -25,7 +25,7 @@ bibliography: references.bib
 csl: apa7.csl  
 ---
 
-# Title:
+# Patient Satisfaction Analysis with Drug Reviews
 
 ## Introduction
 
@@ -358,77 +358,32 @@ drug_test <- drug_test_tsv %>%
     ) %>%
   drop_na(rating)
 
-#Top 5 drug names and conditions
-top_drugs <- drug_train %>%
-  count(urlDrugName, sort = TRUE) %>%
-  slice_head(n = 5) %>%
-  pull(urlDrugName)
-
-top_conditions <- drug_train %>%
-  count(condition, sort = TRUE) %>%
-  slice_head(n = 5) %>%
-  pull(condition)
-
-#Create dummy variables
-drug_train <- drug_train %>%
-  mutate(
-    drug_top = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
-    condition_top = ifelse(condition %in% top_conditions, condition, "Other")
-  ) %>%
-  mutate(
-    across(c(drug_top, condition_top), ~ as.factor(.))
-  )
-
-drug_test <- drug_test %>%
-  mutate(
-    drug_top = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
-    condition_top = ifelse(condition %in% top_conditions, condition, "Other")
-  ) %>%
-  mutate(
-    across(c(drug_top, condition_top), ~ as.factor(.))
-  )
-
-#One-hot encode for drug_top and condition_top
-drug_train_encode <- model.matrix(~ drug_top + condition_top - 1, data = drug_train)
-drug_test_encode <- model.matrix(~ drug_top + condition_top - 1, data = drug_test)
-
-#Scaling
-drug_train$rating <- scale(drug_train$rating)
-drug_test$rating <- scale(drug_test$rating)
-
-#Final predictors matrix
-train_predictors <- cbind(drug_train$rating, drug_train_encode)
-test_predictors <- cbind(drug_test$rating, drug_test_encode)
-
-train_labels <- factor(drug_train$sentiment)
-test_labels <- factor(drug_test$sentiment)
-
-#KNN Cross-Validation
-knn_control <- trainControl(method = "cv", number = 10)
-
-knn_cv <- train(
-  x = as.data.frame(train_predictors),
-  y = train_labels,
-  method = "knn",
-  trControl = knn_control,
-  tuneGrid = expand.grid(k = 1:20)
-)
-
-plot(knn_cv)
-```
-
-```{r, warning=FALSE}
-knn_predictions <- knn(
-  train = train_predictors,
-  test = test_predictors,
-  cl = train_labels,
-  k = knn_cv$bestTune$k
-)
-
-#Confusion matrix with KNN Predictions
-confusionMatrix(knn_predictions, test_labels)
 
 ```
+
+#### Interpretation
+
+The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains. 
+
+**Cluster 1**: 121 + 190 = 311 data points
+**Cluster 2**: 49 + 44 = 93 data points
+**Cluster 3**: 115 + 33 = 148 data points
+**Cluster 4**: 67 + 58 = 125 data points
+**Cluster 5**: 133 + 226 = 359 data points
+
+Cluster 5 represents the highest ratings while Cluster 3 represents the lowest ratings.
+
+##### Model Strengths
+
+The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over. 
+
+There is a clear separation between the clusters.
+
+##### Model Weaknesses 
+
+The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below. 
+
+The model does not guarantee an absolute optimal solution. 
 
 ### K-means Clustering
 
@@ -458,7 +413,17 @@ table(drug_kmeans)
 
 ## Discussion
 
+**Logistic Regression**: excellent at identifying positive reviews, reasonably good at identifying negative reviews
+
+**Neural Networks**: excellent at predicting common scores (ex. 10); struggled with rarer or mid-range ratings
+
+**KNN**: excellent at classification and identifying reviews; concern with “memorizing” instead of “generalizing”
+
+**K-means Clustering**: clusters 1 & 5 performed the best, clear separation of clusters; clusters 2,3,4 performed worse with ratings 6 and below. 
+
 ## References
+
+Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
 # Code Appendix
 
