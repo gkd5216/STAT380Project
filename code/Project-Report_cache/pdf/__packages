@@ -14,3 +14,8 @@ stringr
 lubridate
 janitor
 nnet
+kknn
+broom
+ggcorrplot
+FNN
+factoextra
