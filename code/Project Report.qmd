@@ -339,7 +339,29 @@ The neutral network model achieves moderate overall accuracy (39.8%) and signifi
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
 
-#### KNN Hyperparameter Tuning
+#### Top 5 Drug Names and Conditions
+
+```{r}
+knn_model_columns <- c("rating", "urlDrugName", "condition", "effectiveness")
+drug_train_tsv <- drug_train_tsv %>%
+  drop_na(any_of(knn_model_columns))
+colnames(drug_train_tsv)
+
+top_drugs <- drug_train_tsv %>%
+  count(urlDrugName, sort = TRUE) %>%
+  slice_head(n = 5) %>%
+  pull(urlDrugName)
+
+top_conditions <- drug_train_tsv %>%
+  count(condition, sort = TRUE) %>%
+  slice_head(n = 5) %>%
+  pull(condition)
+
+kable(top_drugs, caption = "Top 5 Drug Names")
+kable(top_conditions, caption = "Top 5 Conditions")
+```
+
+#### KNN Hyperparameter Tuning & Cross-Validation
 
 ```{r, message=FALSE}
 library(FNN)
@@ -349,13 +371,24 @@ set.seed(123)
 drug_train <- drug_train_tsv %>%
   mutate(
     rating = as.numeric(rating),
-    sentiment = ifelse(rating >= 7, "Positive", "Negative")
-    ) %>%
-  drop_na(rating)
+    sentiment = ifelse(rating >= 7, "Positive", "Negative")) 
 
+#Gets top drugs and conditions
+drug_train <- drug_train %>%
+  mutate(
+    drug_top = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"), 
+    condition_top = ifelse(condition %in% top_conditions, condition, "Other") 
+  ) %>%
+  mutate(
+    across(c(drug_top, condition_top), ~ as.factor(.)) # Convert to factors
+  )
+
+#Scales and encodes the data
+drug_train$rating_scaled <- scale(drug_train$rating)
+drug_train_encode <- model.matrix(~ drug_top + condition_top - 1, data = drug_train)
+train_predictors <- cbind(drug_train$rating_scaled, drug_train_encode)
 train_labels <- factor(drug_train$sentiment)
 knn_control <- trainControl(method = "cv", number = 10)
-knn_pred <- predict(drug_train, newdata = train_labels, type = "class")
 
 #Cross Validation
 knn_cv <- train(
@@ -365,6 +398,7 @@ knn_cv <- train(
   trControl = knn_control, 
   tuneGrid = expand.grid(k = 1:20) 
   )
+
 plot(knn_cv)
 ```
 
@@ -387,30 +421,25 @@ ggplot(data = plot_data_sentiment, aes(x = rating,
   theme_minimal()
 ```
 
-
 #### Interpretation
 
-The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains. 
+The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains.
 
-**Cluster 1**: 121 + 190 = 311 data points
-**Cluster 2**: 49 + 44 = 93 data points
-**Cluster 3**: 115 + 33 = 148 data points
-**Cluster 4**: 67 + 58 = 125 data points
-**Cluster 5**: 133 + 226 = 359 data points
+**Cluster 1**: 121 + 190 = 311 data points **Cluster 2**: 49 + 44 = 93 data points **Cluster 3**: 115 + 33 = 148 data points **Cluster 4**: 67 + 58 = 125 data points **Cluster 5**: 133 + 226 = 359 data points
 
 Cluster 5 represents the highest ratings while Cluster 3 represents the lowest ratings.
 
 ##### Model Strengths
 
-The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over. 
+The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over.
 
 There is a clear separation between the clusters.
 
-##### Model Weaknesses 
+##### Model Weaknesses
 
-The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below. 
+The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below.
 
-The model does not guarantee an absolute optimal solution. 
+The model does not guarantee an absolute optimal solution.
 
 ### K-means Clustering
 
@@ -444,7 +473,6 @@ table(drug_kmeans)
 
 ##### Model Weaknesses
 
-
 ## Discussion
 
 **Logistic Regression**: excellent at identifying positive reviews, reasonably good at identifying negative reviews
@@ -453,11 +481,11 @@ table(drug_kmeans)
 
 **KNN**: excellent at classification and identifying reviews; concern with “memorizing” instead of “generalizing”
 
-**K-means Clustering**: clusters 1 & 5 performed the best, clear separation of clusters; clusters 2,3,4 performed worse with ratings 6 and below. 
+**K-means Clustering**: clusters 1 & 5 performed the best, clear separation of clusters; clusters 2,3,4 performed worse with ratings 6 and below.
 
 ## References
 
-Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) [Dataset]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
+Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
 # Code Appendix
 
