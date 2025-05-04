@@ -60,7 +60,7 @@ The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC I
 **Source**: [Drug Effects Data](https://archive.ics.uci.edu/dataset/461/drug+review+dataset+druglib+com).
 
 ```{r echo=FALSE, message=FALSE}
-#| label: Table1
+#| label: Table0
 #| fig-cap: "Dataset"
 #| fig-pos: H
 #| fig-height: 5
@@ -122,14 +122,15 @@ glimpse(drug_train_tsv)
 glimpse(drug_test_tsv)
 ```
 
+Only the drug test dataset outputted with a missing value being present, so we figured out what column and row contains this. Then, we figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this. 
+
 ```{r echo=FALSE, message=FALSE}
 any(is.na(drug_train_tsv))
 any(is.na(drug_test_tsv))
 colSums(is.na(drug_test_tsv))
 ```
-Only the drug test dataset outputted with a missing value being present, so we figured out what column and row contains this. Then, we figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this. 
 
-Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models. For models such as Logistic Regression and Neural NEtworks, the structured variables (urlDrugName, condition, effectiveness, sideEffects, rating) were utilized. 
+Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models. For models such as Logistic Regression and Neural Networks, the structured variables (urlDrugName, condition, effectiveness, sideEffects, rating) were utilized. 
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table1
