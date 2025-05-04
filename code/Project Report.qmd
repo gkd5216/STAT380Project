@@ -41,11 +41,11 @@ We will first be presenting the background of the dataset and related work. Then
 
 The **Drug Reviews** dataset provides a useful source of information beyond just the structured clinical trial data, offering insights into the real-world drug effectiveness, side effects, and the overall patient satisfaction. The Health and Medicine field usually leverages techniques from natural languages processing (NLP) and machine learning in order to get the information from patient's textual data and understand it. Prior research has explored the identification of adverse drug reactions using NLP and the analysis of patient sentiments regarding drug experiences.
 
-The first piece of related work is the introductory paper for the Drug Reviews dataset is titled **Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning** [^1] by F. Gräßer, S. Kallumadi, H. Malberg, and S. Zaunseder. This research paper demonstrated the applicability of sentiment analysis to drug reviews. This includes classifying the overall patient satisfaction and investigating the challenges with data limitations and transferring models across various domains and data sources. 
+The first piece of related work is the introductory paper for the Drug Reviews dataset is titled **Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning** [^1] by F. Gräßer, S. Kallumadi, H. Malberg, and S. Zaunseder. This research paper demonstrated the applicability of sentiment analysis to drug reviews. This includes classifying the overall patient satisfaction and investigating the challenges with data limitations and transferring models across various domains and data sources.
 
 [^1]: Gräßer, F., Kallumadi, S., Malberg, H., & Zaunseder, S. (2018). Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning. Proceedings of the 2018 International Conference on Digital Health.
 
-Furthermore, the application of machine learning with predicting patient sentiments/ratings and satisfaction from drug reviews is an active area. The second piece of related work is a research paper that was highly influencial to the production of the introductory paper. This paper is titled **Predicting Sentiments of Users About Medical Treatments using Pre-trained Large Language Models** [^2] by A. Hassan, J. Bagherzadeh, M. Khorasani, and A. Sorayaie Azar. This research paper explores the usage of various machine learning techniques including traditional models and large language models (LLMs). These models were used to predict the ratings on drug reviews and achieve high accuracies in classification tasks.  
+Furthermore, the application of machine learning with predicting patient sentiments/ratings and satisfaction from drug reviews is an active area. The second piece of related work is a research paper that was highly influencial to the production of the introductory paper. This paper is titled **Predicting Sentiments of Users About Medical Treatments using Pre-trained Large Language Models** [^2] by A. Hassan, J. Bagherzadeh, M. Khorasani, and A. Sorayaie Azar. This research paper explores the usage of various machine learning techniques including traditional models and large language models (LLMs). These models were used to predict the ratings on drug reviews and achieve high accuracies in classification tasks.
 
 [^2]: Hassan, A., Mohasefi, J.B., & Azar, S. (2025). Predicting Sentiments of Users about Medical Treatments using Pre-trained Large Language Models. Journal of Information Systems Engineering and Management.
 
@@ -53,17 +53,45 @@ Furthermore, the application of machine learning with predicting patient sentime
 
 ### Provenance
 
-The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^3], explores reviews from patients on specific drugs along with related medical conditions. It includes structured data such as the **urlDrugName**, **condition**, **rating**, **effectiveness**, and **sideEffects**, as well as text reviews such as **benefitsReview**, **sideEffectsReview**, and **commentsReview**.
+The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^3], explores reviews from patients on specific drugs along with related medical conditions. The reviews and ratings are grouped into reports on the three aspects being the benefits, side effects and overall comment. The data was originally obtained by crawling online pharmaceutical review sites. This dataset is split into 2 tsv files with one being a train set (75%) and the other one being a test set (25%). It contains 4143 instances and 8 features.  
 
 [^3]: Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
-The UC Irvine Repository
-
 **Source**: [Drug Effects Data](https://archive.ics.uci.edu/dataset/461/drug+review+dataset+druglib+com).
+
+```{r echo=FALSE, message=FALSE}
+#| label: Table1
+#| fig-cap: "Dataset"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Drug Reviews dataset"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for importing dataset"
+
+#Load necessary libraries
+library(dplyr) #data manipulation
+library(knitr) #table formats
+library(readr) 
+library(kableExtra)
+library(caret)
+library(forcats)
+library(nnet)
+library(kknn)
+library(tidyr)
+library(broom)
+library(ggcorrplot)
+
+#Import UC Irvine test tsv files. (Initial Definition for All Code)
+drug_train_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv")
+drug_test_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTrain_raw.tsv")
+
+```
 
 ### Variable Description
 
-The response variable of interest is the ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**.
+The response variable is the patient's overall ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**. 
 
 An example of a **high review's** (Rating = 10) textual review includes the following:
 
@@ -85,6 +113,24 @@ An example of a **low review's** (Rating = 1) textual review includes the follow
 
 -   **commentsReview**: Took one 10 mg pill nightly...
 
+### Data Cleaning and Preprocessing
+
+Contrary to the UC Irvine Repository stating "No Missing Values" for the dataset, there were missing values observed in the text review field including benefitsReview, sideEffectsReview, and commentsReview. We initially used glimpse() to inspect the train and test datasets to possibly find missing values. It did not show any missing values in either dataset, but it did provide us with useful information about the variables such as the data types and structure. 
+
+```{r echo=FALSE, message=FALSE}
+glimpse(drug_train_tsv)
+glimpse(drug_test_tsv)
+```
+
+```{r echo=FALSE, message=FALSE}
+any(is.na(drug_train_tsv))
+any(is.na(drug_test_tsv))
+colSums(is.na(drug_test_tsv))
+```
+Only the drug test dataset outputted with a missing value being present, so we figured out what column and row contains this. Then, we figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this. 
+
+Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models. For models such as Logistic Regression and Neural NEtworks, the structured variables (urlDrugName, condition, effectiveness, sideEffects, rating) were utilized. 
+
 ```{r echo=FALSE, message=FALSE}
 #| label: Table1
 #| fig-cap: "Table 1"
@@ -95,23 +141,6 @@ An example of a **low review's** (Rating = 1) textual review includes the follow
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 1"
-
-#Load necessary libraries
-library(dplyr) #data manipulation
-library(knitr) #table formats
-library(readr) 
-library(kableExtra)
-library(caret)
-library(forcats)
-library(nnet)
-library(kknn)
-library(tidyr)
-library(broom)
-library(ggcorrplot)
-
-#Import UC Irvine test csv file. (Initial Definition for All Code)
-drug_train_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTest_raw.tsv")
-drug_test_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Project/refs/heads/main/data/drugLibTrain_raw.tsv")
 
 # Summary Statistics grouping by Geographic Area.
 variable_analysis <- data.frame(
@@ -137,18 +166,6 @@ kable(
   variable_analysis,
   caption = "Variables used in Analysis"
   )
-
-```
-
-### Data Cleaning and Preprocessing
-
-This glimpse of the Drug Reviews train and test data displays a dataset in need of being cleaned and tidied.
-
-```{r message=FALSE}
-library(tidyverse)
-library(janitor)
-glimpse(drug_train_tsv)
-glimpse(drug_test_tsv)
 
 ```
 
