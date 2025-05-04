@@ -33,19 +33,29 @@ In this report, we will be exploring the following **research question**:
 
 -   **Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?**
 
-This question explores the patterns with machine learning tasks and their effectiveness on predicting the satisfaction of patients based on a given class of drug. 
+This question explores the patterns with machine learning tasks and their effectiveness on predicting the satisfaction of patients based on a given class of drug.
 
-We will first be presenting the background of the dataset and related work. Then, 
+We will first be presenting the background of the dataset and related work. Then,
 
 ## Background & Related Work
+
+The **Drug Reviews** dataset provides a useful source of information beyond just the structured clinical trial data, offering insights into the real-world drug effectiveness, side effects, and the overall patient satisfaction. The Health and Medicine field usually leverages techniques from natural languages processing (NLP) and machine learning in order to get the information from patient's textual data and understand it. Prior research has explored the identification of adverse drug reactions using NLP and the analysis of patient sentiments regarding drug experiences.
+
+The first piece of related work is the introductory paper for the Drug Reviews dataset is titled **Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning** [^1] by F. Gräßer, S. Kallumadi, H. Malberg, and S. Zaunseder. This research paper demonstrated the applicability of sentiment analysis to drug reviews. This includes classifying the overall patient satisfaction and investigating the challenges with data limitations and transferring models across various domains and data sources. 
+
+[^1]: Gräßer, F., Kallumadi, S., Malberg, H., & Zaunseder, S. (2018). Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning. Proceedings of the 2018 International Conference on Digital Health.
+
+Furthermore, the application of machine learning with predicting patient sentiments/ratings and satisfaction from drug reviews is an active area. The second piece of related work is a research paper that was highly influencial to the production of the introductory paper. This paper is titled **Predicting Sentiments of Users About Medical Treatments using Pre-trained Large Language Models** [^2] by A. Hassan, J. Bagherzadeh, M. Khorasani, and A. Sorayaie Azar. This research paper explores the usage of various machine learning techniques including traditional models and large language models (LLMs). These models were used to predict the ratings on drug reviews and achieve high accuracies in classification tasks.  
+
+[^2]: Hassan, A., Mohasefi, J.B., & Azar, S. (2025). Predicting Sentiments of Users about Medical Treatments using Pre-trained Large Language Models. Journal of Information Systems Engineering and Management.
 
 ## Data Description & Preprocessing
 
 ### Provenance
 
-The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^1], explores reviews from patients on specific drugs along with related medical conditions. It includes structured data such as the **urlDrugName**, **condition**, **rating**, **effectiveness**, and **sideEffects**, as well as text reviews such as **benefitsReview**, **sideEffectsReview**, and **commentsReview**.
+The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^3], explores reviews from patients on specific drugs along with related medical conditions. It includes structured data such as the **urlDrugName**, **condition**, **rating**, **effectiveness**, and **sideEffects**, as well as text reviews such as **benefitsReview**, **sideEffectsReview**, and **commentsReview**.
 
-[^1]: Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
+[^3]: Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
 The UC Irvine Repository
 
@@ -506,6 +516,10 @@ The Plus (**Cluster 3**), Triangle (**Cluster 2**), and Cross (**Cluster 4**) cl
 ## Conclusion
 
 ## References
+
+Gräßer, F., Kallumadi, S., Malberg, H., & Zaunseder, S. (2018). Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning. Proceedings of the 2018 International Conference on Digital Health.
+
+Hassan, A., Mohasefi, J.B., & Azar, S. (2025). Predicting Sentiments of Users about Medical Treatments using Pre-trained Large Language Models. Journal of Information Systems Engineering and Management.
 
 Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
