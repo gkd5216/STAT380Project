@@ -27,25 +27,35 @@ csl: apa7.csl
 
 # Patient Satisfaction Analysis with Drug Reviews
 
-## Introduction
+Patient experiences with medications is crucial when it comes to the healthcare domain. These drug reviews give valuable insights into aspects such as side effects, drug effectiveness, and overall patient satisfaction. Our project explores the ***Drug Reviews*** dataset from the UC Irvine Repository.
 
-Patient experiences with medications is crucial when it comes to the healthcare domain by providing insights on the side effects, drug effectiveness, and overall satisfaction.
+In this report, we will be exploring the following **research question**:
 
-**Research Question**
+-   **Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?**
 
-In this report, we will be exploring the following research question:
+This question explores the patterns with machine learning tasks and their effectiveness on predicting the satisfaction of patients based on a given class of drug. 
 
-**Can machine learning tasks predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition?**
+We will first be presenting the background of the dataset and related work. Then, 
 
-This research question
+## Background & Related Work
 
-## Exploratory Data Analysis
+## Data Description & Preprocessing
+
+### Provenance
+
+The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^1], explores reviews from patients on specific drugs along with related medical conditions. It includes structured data such as the **urlDrugName**, **condition**, **rating**, **effectiveness**, and **sideEffects**, as well as text reviews such as **benefitsReview**, **sideEffectsReview**, and **commentsReview**.
+
+[^1]: Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
+
+The UC Irvine Repository
+
+**Source**: [Drug Effects Data](https://archive.ics.uci.edu/dataset/461/drug+review+dataset+druglib+com).
 
 ### Variable Description
 
 The response variable of interest is the ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**.
 
-An example of a high review's (Rating = 10) textual review includes the following:
+An example of a **high review's** (Rating = 10) textual review includes the following:
 
 -   **urlDrugName**: Xanax
 -   **Rating**: 10
@@ -53,7 +63,7 @@ An example of a high review's (Rating = 10) textual review includes the followin
 -   **sideEffectsReview**: I really don't have any side effects other than the mild but very tolerable issue of taking it 4-5 times a day which isn't an effect but just the way you need to take this...
 -   **commentsReview**: I first started taking this at 3 times per day with .25 mg pills. I was advised not to take as needed with my panic attacks as that would reinforce the idea of taking a pill when it's needed and not help me work around my anxiety...
 
-An example of a low review's (Rating = 1) textual review includes the following:
+An example of a **low review's** (Rating = 1) textual review includes the following:
 
 -   **urlDrugName**: Claritin
 
@@ -63,9 +73,7 @@ An example of a low review's (Rating = 1) textual review includes the following:
 
 -   **sideEffectsReview**: I had some horrifying mental and physical side effects. ruined a year of my life. read this - it mentions everything I dealt with: http://www.askapatient.com/viewrating.aspdrug=19658&name=CLARITIN
 
--   **commentsReview**: Took one 10 mg pill nightly.
-
-### Data Visualization
+-   **commentsReview**: Took one 10 mg pill nightly...
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table1
@@ -122,6 +130,20 @@ kable(
 
 ```
 
+### Data Cleaning and Preprocessing
+
+This glimpse of the Drug Reviews train and test data displays a dataset in need of being cleaned and tidied.
+
+```{r message=FALSE}
+library(tidyverse)
+library(janitor)
+glimpse(drug_train_tsv)
+glimpse(drug_test_tsv)
+
+```
+
+### Exploratory Data Analysis
+
 ```{r}
 ggplot(drug_train_tsv, aes(x = rating)) +
   geom_histogram(binwidth = 1, fill = "blue", color = "black") +
@@ -132,33 +154,11 @@ ggplot(drug_test_tsv, aes(x = rating)) +
   labs(title = "Distribution of Patient Ratings (Test)", x = "Rating (1-10)", y = "Number of Reviews")
 ```
 
-### Data Cleaning
+## Methodology
 
-This glimpse of the Drug Reviews train and test data displays a dataset in need of being cleaned and tidied.
+### Data Wrangling
 
-```{r, message=FALSE}
-library(tidyverse)
-library(janitor)
-glimpse(drug_train_tsv)
-glimpse(drug_test_tsv)
-
-```
-
-```{r}
-
-#Tidied drug train
-#drug_train <- drug_train %>%
-  #clean_names() 
-
-#Tidied drug test
-#drug_test <- drug_test %>%
-  #clean_names()
-
-```
-
-We tidied the Drug Reviews Train and Test datasets by cleaning up the names with the Janitor library.
-
-## Modeling
+## Model Results
 
 ### Logistic Regression: Predicting Positive vs. Negative Reviews
 
@@ -234,14 +234,6 @@ True Positives (TP) = 537 537 reviews were predicted positive and actually posit
 | No Information Rate (NIR) | 0.6471 | 64.71% of reviews in the test set are in the majority class (positive); always guessing the majority class (positive) would be correct 64.71% of the time |
 | McNemar’s Test | p = 3.183e-06 | Suggests a significant difference in types of errors; model is not just guessing randomly |
 
-***Model Strengths:*** - High accuracy (82.9%) - Excellent at identifying positive reviews (specificity = 91.8%) - High precision for negative class (precision = 81.5%), so false alarms are limited - Performs much better than guessing the majority class (accuracy \> NIR)
-
-***Model Weaknesses:*** - Struggles more with detecting negative reviews (sensitivity = 66.5%), misses about 1 in 3 negative reviews
-
-***Conclusion*** The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment.
-
-***Answer to “Can we predict if a patient’s review is positive or negative based on their feedback?”*** Yes, we can predict whether a patient’s review is positive or negative using machine learning. Our logistic regression model, trained on features such as the drug name, medical condition, and reported effectiveness, achieved an overall accuracy of 82.85%, which was much higher than the no-information rate of 64.71%. The model showed strong performance in identifying positive reviews (specificity = 91.8%) and reasonably good performance for negative reviews (sensitivity = 66.5%). These results indicate that the model can reliably classify overall patient sentiment based on the structured data.
-
 ### Neutral Network: Predicting Ratings with Nuance
 
 Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
@@ -286,10 +278,6 @@ confusionMatrix(nn_pred, valid_rating)
 
 ```
 
-#### Interpretation
-
-##### Class-by-Class Breakdown
-
 | Class | Sensitivity | Precision | Balanced Accuracy |
 |-------|-------------|-----------|-------------------|
 | 1     | 50.8%       | 64.6%     | 73.9%             |
@@ -303,9 +291,7 @@ confusionMatrix(nn_pred, valid_rating)
 | 9     | 2.1%        | 7.4%      | 48.6%             |
 | 10    | 89.9%       | 50.8%     | 81.2%             |
 
-##### Overall Model Performance
-
-**Accuracy**: 0.3981
+#### **Accuracy**: 0.3981
 
 -   The model correctly predicted the exact rating about 40% of the time.
 
@@ -320,20 +306,6 @@ confusionMatrix(nn_pred, valid_rating)
 **Kappa**: 0.2672
 
 -   This indicates fair agreement beyond chance; falls within 0.2-0.4 range.
-
-##### Model Strengths
-
--   Performs best on class 10, the most common rating (recall = 89.9%)
-
--   Moderate sensitivity for Classes 1 and 8, meaning the model is able to detect some negative (1) and mid-range (8) ratings well
-
-##### Model Weaknesses
-
--   Struggles with middle ratings (2-6), very low recall and precision
-
--   Leans heavily towards the most frequent classes, possibly due to class imbalance within the dataset
-
-The neutral network model achieves moderate overall accuracy (39.8%) and significantly outperforms baseline guessing. However, it shows a strong bias towards frequent ratings like 10, while struggling to accurately detect rare or mid-range ratings (2-6). Future work or revisions should address the class imbalance to improve performance across all review scores.
 
 ### KNN (K-Nearest Neighbors)
 
@@ -421,26 +393,6 @@ ggplot(data = plot_data_sentiment, aes(x = rating,
   theme_minimal()
 ```
 
-#### Interpretation
-
-The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains.
-
-**Cluster 1**: 121 + 190 = 311 data points **Cluster 2**: 49 + 44 = 93 data points **Cluster 3**: 115 + 33 = 148 data points **Cluster 4**: 67 + 58 = 125 data points **Cluster 5**: 133 + 226 = 359 data points
-
-Cluster 5 represents the highest ratings while Cluster 3 represents the lowest ratings.
-
-##### Model Strengths
-
-The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over.
-
-There is a clear separation between the clusters.
-
-##### Model Weaknesses
-
-The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below.
-
-The model does not guarantee an absolute optimal solution.
-
 ### K-means Clustering
 
 ```{r, message=FALSE}
@@ -467,11 +419,79 @@ plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k 
 table(drug_kmeans)
 ```
 
-#### Interpretation
+## Model Interpretations
 
-##### Model Strengths
+### Logistic Regression Model
 
-##### Model Weaknesses
+#### Model Strengths
+
+-   High accuracy (82.9%)
+-   Excellent at identifying positive reviews (specificity = 91.8%)
+-   High precision for negative class (precision = 81.5%), so false alarms are limited
+-   Performs much better than guessing the majority class (accuracy \> NIR)
+
+#### Model Weaknesses
+
+-   Struggles more with detecting negative reviews (sensitivity = 66.5%)
+-   Misses about 1 in 3 negative reviews
+
+#### Conclusion
+
+We can predict whether a patient’s review is positive or negative using machine learning. Our logistic regression model, trained on features such as the drug name, medical condition, and reported effectiveness, achieved an overall accuracy of 82.85%, which was much higher than the no-information rate of 64.71%. The model showed strong performance in identifying positive reviews (specificity = 91.8%) and reasonably good performance for negative reviews (sensitivity = 66.5%). These results indicate that the model can reliably classify overall patient sentiment based on the structured data.
+
+The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment.
+
+### Neural Networks Model
+
+#### Model Strengths
+
+-   Performs best on class 10, the most common rating (recall = 89.9%)
+
+-   Moderate sensitivity for Classes 1 and 8, meaning the model is able to detect some negative (1) and mid-range (8) ratings well
+
+#### Model Weaknesses
+
+-   Struggles with middle ratings (2-6), very low recall and precision
+
+-   Leans heavily towards the most frequent classes, possibly due to class imbalance within the dataset
+
+#### Conclusion
+
+The neutral network model achieves moderate overall accuracy (39.8%) and significantly outperforms baseline guessing. However, it shows a strong bias towards frequent ratings like 10, while struggling to accurately detect rare or mid-range ratings (2-6). Future work or revisions should address the class imbalance to improve performance across all review scores.
+
+### K-Nearest Neighbors (KNN) Model
+
+The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains.
+
+-   **Cluster 1**: 121 + 190 = 311 data points
+
+-   **Cluster 2**: 49 + 44 = 93 data points
+
+-   **Cluster 3**: 115 + 33 = 148 data points
+
+-   **Cluster 4**: 67 + 58 = 125 data points
+
+-   **Cluster 5**: 133 + 226 = 359 data points
+
+**Cluster 5** represents the highest ratings while **Cluster 3** represents the lowest ratings.
+
+#### Model Strengths
+
+The Circle (**Cluster 1**) and Diamond (**Cluster 5**) clusters perform exceptionally well with ratings 7 and over. There is a clear separation between the clusters.
+
+#### Model Weaknesses
+
+The Plus (**Cluster 3**), Triangle (**Cluster 2**), and Cross (**Cluster 4**) clusters perform poorly (less than average) with ratings 6 and below. The model does not guarantee an absolute optimal solution.
+
+#### Conclusion
+
+### K-means Clustering Model
+
+#### Model Strengths
+
+#### Model Weaknesses
+
+#### Conclusion
 
 ## Discussion
 
@@ -483,11 +503,13 @@ table(drug_kmeans)
 
 **K-means Clustering**: clusters 1 & 5 performed the best, clear separation of clusters; clusters 2,3,4 performed worse with ratings 6 and below.
 
+## Conclusion
+
 ## References
 
 Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
-# Code Appendix
+## Code Appendix
 
 ```{r codeAppend, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
