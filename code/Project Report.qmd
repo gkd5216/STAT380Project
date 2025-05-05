@@ -381,48 +381,54 @@ The dataset is split into training and testing sets in order to evaluate the KNN
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 6"
 
+library(class)
+library(FactoMineR)
+
 drug_train <- drug_train_tsv %>%
+  filter(!is.na(rating), !is.na(urlDrugName), !is.na(condition)) %>%
   mutate(
     sentiment = factor(ifelse(rating >= 7, 1, 0), levels = c(0, 1)))
 
-# Top 10 drugs
-top_drugs <- drug_train_tsv %>%
+# Select top 30 drugs and conditions
+top_drugs <- drug_train %>%
   count(urlDrugName, sort = TRUE) %>%
-  slice_head(n = 10) %>%
+  slice_head(n = 30) %>%
   pull(urlDrugName)
 
-# Top 10 conditions
-top_conditions <- drug_train_tsv %>%
+top_conditions <- drug_train %>%
   count(condition, sort = TRUE) %>%
-  slice_head(n = 10) %>%
+  slice_head(n = 30) %>%
   pull(condition)
 
-# Collapse the less common values
-drug_train <- drug_train %>%
+# Recode less common ones as "Other"
+drug_model <- drug_train %>%
   mutate(
-    top_drugs = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
-    top_conditions = ifelse(condition %in% top_conditions, condition, "Other")
-  )
+    drug_group = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
+    condition_group = ifelse(condition %in% top_conditions, condition, "Other")
+  ) %>%
+  select(sentiment, drug_group, condition_group)
 
-# Train and Test set split
+# One-hot encode
+encoded_data <- model.matrix(~ drug_group + condition_group - 1, data = drug_model)
+
+# Combine features and labels
+encoded_df <- as.data.frame(encoded_data)
+encoded_df$sentiment <- drug_model$sentiment
+
+# Train/test split
 set.seed(42)
-train_ind <- createDataPartition(drug_train$sentiment, p = 0.8, list = FALSE)
-train_set <- drug_train[train_ind, ]
-test_set <- drug_train[-train_ind, ]
+split_ind <- createDataPartition(encoded_df$sentiment, p = 0.8, list = FALSE)
+train_set <- encoded_df[split_ind, ]
+test_set <- encoded_df[-split_ind, ]
 
-# Encoding
-train_encode <- model.matrix(~ top_drugs + top_conditions - 1, data = train_set)
-test_encode <- model.matrix(~ top_drugs + top_conditions - 1, data = test_set)
+train_x <- train_set %>% select(-sentiment)
+test_x <- test_set %>% select(-sentiment)
+train_y <- train_set$sentiment
+test_y <- test_set$sentiment
 
-train_labels <- train_set$sentiment
-test_labels <- test_set$sentiment
-
-knn_pred <- knn(train = train_encode, 
-                test = test_encode, 
-                cl = train_labels, k = 5)
-
-# Evaluate Model
-confusionMatrix(knn_pred, test_labels)
+# Run KNN
+knn_pred <- knn(train = train_x, test = test_x, cl = train_y, k = 5)
+confusionMatrix(knn_pred, test_y)
 ```
 
 ## K-means Clustering: Discovery of Patient Review Groups
@@ -431,7 +437,7 @@ Can we discover hidden patterns in drug reviews without using labels?
 
 In this section, we explore the underlying patterns in patient satisfaction. We applied K-means clustering to a subset of structured features including the rating, drug name, and condition.
 
-The dataset used was the **drugLibTrain_raw.tsv** file from which we wrangled the data and selected features for the K-means model. Missing values were filtered out of the raw train data. We grouped less frequent occurrences into a category titled "Other" utilizing the top drugs and conditions defined prior.
+The dataset used was the **drugLibTrain_raw.tsv** file from which we wrangled the data and selected features for the K-means model. Missing values were filtered out of the raw train data. We grouped less frequent occurrences into a category titled "Other" utilizing the top drugs and conditions defined prior. It selects the rating, top_drugs, and top_conditions variables that will be used as the input features for the k-means clustering algorithm. Model.matrix is used to perform one-hot encoding and creating dummy variables for each level of top_drugs and top_conditions. The numerical rating variable is then processed using scale() and performing standardization. After scaling, its combined (cbind) with the encoded categorical variables to create kmeans_input. Setting the seed then ensures the initialization of the algorithm being reproducible. The core k-means algorithm is run and the cluster assignments are added as a new column. The code then visualizes the clustering results.
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table8
@@ -501,21 +507,13 @@ To enhance predictive accuracy, future work should address the class imbalance u
 
 ## K-Nearest Neighbors (KNN) Model
 
-According to the confusion matrix, out of 207 test reviews, 129 of them were true negatives and 6 of them were true positives. 5 of them were also false positives and 67 of them were false negatives.
+According to the confusion matrix, out of 207 test reviews, 129 of them were true negatives and 6 of them were true positives. 5 of them were also false positives and 67 of them were false negatives. This means that 129 reviews were predicted negative and actually were negative, 5 reviews were predicted positive but actually were negative, 67 reviews were predicted negative but were actually positive, and 6 reviews were predicted positive and actually were positive.
 
-The overall accuracy of the model is 0.6522 which means that it correctly classified about 65.22% of the reviews in the test set. There is a No Information Rate (NIR) of 0.6473 which represents the accuracy achieved predicting the majority class. On the other hand, the Kappa is very low at 0.0556 which represents only slight agreement between the KNN model's predictions and the actual sentiment.
-
-**True Negatives (TN)** = 129; 129 reviews were predicted negative and actually negative
-
-**False Positives (FP)** = 5; 5 reviews were predicted positive but actually negative
-
-**False Negatives (FN)** = 67; 67 reviews were predicted negative but actually positive
-
-**True Positives (TP)** = 6; 6 reviews were predicted positive and actually positive
-
-**Total Observations** = 129 + 5 + 67 + 6 = 207 which is the size of the test set.
+The overall **accuracy** of the model is 0.6522 which means that it correctly classified about 65.22% of the reviews in the test set. There is a **No Information Rate** (NIR) of 0.6473 which represents the accuracy achieved predicting the majority class. On the other hand, the Kappa is very low at 0.0556 which represents only slight agreement between the KNN model's predictions and the actual sentiment. The 'Positive' Class came out as 0
 
 ## K-means Clustering Model
+
+The k-means clustering model
 
 # Discussion
 
@@ -523,9 +521,9 @@ The overall accuracy of the model is 0.6522 which means that it correctly classi
 
 **Neural Networks**: excellent at predicting common scores (ex. 10); struggled with rarer or mid-range ratings
 
-**KNN**: excellent at classification and identifying reviews; concern with “memorizing” instead of “generalizing”
+**KNN**: correctly classified about 65.22% of the reviews in the test set
 
-**K-means Clustering**: clusters 1 & 5 performed the best, clear separation of clusters; clusters 2,3,4 performed worse with ratings 6 and below.
+**K-means Clustering**:
 
 # Conclusion
 
