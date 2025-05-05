@@ -204,7 +204,15 @@ Both datasets display left-skewed histograms with the distribution of patient ra
 
 # Methodology
 
-We used four machine learning models which are Logistic Regression, Neural Networks, K-Nearest Neighbors (KNN), and K-means Clustering.
+We chose to use four machine learning models which are **Logistic Regression**, **Neural Networks**, **K-Nearest Neighbors (KNN)**, and **K-means Clustering**. We want to predict the overall satisfaction of the patients with a particular class of drugs for a given medical condition, so these machine learning models were the best fit.
+
+**Logistic regression** is a supervised learning model that is used for binary response variables. It models the probability that the response variable will take on a specific level. In our case, the response variable is the patient's overall ratings of the drugs (positive/negative reviews) which is relevant to the satisfaction of the patients.
+
+**Neural Networks** is a supervised learning model that is used to predict a more nuanced outcome. It goes beyond just the positive or negative sentiment and involves predicting the original 10-point rating scale of the drug reviews.
+
+**K-Nearest Neighbors (KNN)** is a supervised learning model that is used for classification. It can be used for regression and classification tasks. It aims to classify the sentiment of a new drug review based on similar past patient reviews. The main idea is that to predict the response for a new observation, you find the k observations in the Train dataset that are nearest to the new observation.
+
+**K-means Clustering**
 
 # Model Results
 
@@ -288,16 +296,16 @@ confusionMatrix(factor(test_pred_class), factor(test_data_clean$sentiment))
 
 Confusion Matrix 0 = negative review, 1 = positive review
 
-True Negatives (TN) = 212 212 reviews were predicted negative and actually negative
+**True Negatives (TN)** = 212; 212 reviews were predicted negative and actually negative
 
-False Positives (FP) = 107 107 reviews were predicted positive but actually negative
+**False Positives (FP)** = 107; 107 reviews were predicted positive but actually negative
 
-False Negatives (FN) = 48 48 reviews were predicted negative but actually positive
+**False Negatives (FN)** = 48; 48 reviews were predicted negative but actually positive
 
-True Positives (TP) = 537 537 reviews were predicted positive and actually positive
+**True Positives (TP)** = 537; 537 reviews were predicted positive and actually positive
 
 | Metric | Value | Meaning |
-|----|----|----|
+|--------------------|-------------------|---------------------------------|
 | Accuracy | 0.8285 | 82.85% of predictions were correct overall |
 | Sensitivity (Class 0) | 0.6646 | 66.46% of actual negative reviews were correctly identified |
 | Specificity (Class 1) | 0.9179 | 91.79% of actual positive reviews were correctly identified |
@@ -311,6 +319,12 @@ True Positives (TP) = 537 537 reviews were predicted positive and actually posit
 ## Neutral Network: Predicting Ratings with Nuance
 
 Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
+
+This section investigates whether a more detailed prediction of patient review ratings can be achieved using the neural network supervised learning model. Unlike binary sentiment classification, which only determines if a review is positive or negative, this task aims to predict the exact numerical rating on a 1-10 scale given by patients. The central question is whether structured patient attributes, like the name of the drug, treated condition, and self-reported effectiveness, contain enough information to support such predictions. Applying a neural network model may help capture the complex, nonlinear relationships that could influence how patients rate their experiences with medications.
+
+The dataset used was the **drugLibTrain_raw.tsv** file, from which a subset of relevant variables – **rating, urlDrugName, condition,** and **effectiveness** – was selected for analysis. All rows containing missing values were dropped to ensure model integrity. The target variable, **rating**, was converted into a factor to reflect its categorical nature, and the categorical predictors were simplified by lumping less frequent values into “Other” categories. The top 20 drug names and conditions, and top 5 effectiveness levels, were retained to prevent overfitting. This preprocessing ensured a manageable number of factor levels, which is especially important in neural network models with limited hidden units. 
+
+The cleaned dataset was split into training and testing sets using an 80/20 stratified split, preserving the distribution of review scores across both sets. A feedforward neural network model was trained using the nnet package in R. The network architecture included a single hidden layer with 5 neurons, and the model was trained over 200 iterations. The predictors used were **urlDrugName, condition,** and **effectiveness**, all treated as categorical inputs. After training, the model was applied to the testing set, and predictions were evaluated against the actual review scores using a confusion matrix and class-wise performance metrics.
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table4
@@ -330,10 +344,8 @@ library(caret)
 library(dplyr)
 library(forcats)
 
-# Drop NAs
 train_data <- drug_train_tsv %>%
-  select(rating, urlDrugName, condition, effectiveness) %>%
-  drop_na()
+  select(rating, urlDrugName, condition, effectiveness) 
 
 # Treat rating as factor
 train_data$rating <- as.factor(train_data$rating)
@@ -382,7 +394,7 @@ confusionMatrix(nn_pred, valid_rating)
 | 9     | 2.1%        | 7.4%      | 48.6%             |
 | 10    | 89.9%       | 50.8%     | 81.2%             |
 
-### **Accuracy**: 0.3981
+**Accuracy**: 0.3981
 
 -   The model correctly predicted the exact rating about 40% of the time.
 
@@ -398,43 +410,9 @@ confusionMatrix(nn_pred, valid_rating)
 
 -   This indicates fair agreement beyond chance; falls within 0.2-0.4 range.
 
-## KNN (K-Nearest Neighbors)
+## K-Nearest Neighbors (KNN): Predicting Binary Classification
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
-
-### Top 5 Drug Names and Conditions
-
-```{r echo=FALSE, message=FALSE}
-#| label: Table5
-#| fig-cap: "Table 5"
-#| fig-pos: H
-#| fig-height: 5
-#| fig-width: 7
-#| fig-alt: "Table with Top Drugs and Conditions"
-#| aria-describedby: namesPlotLD
-#| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 5"
-
-knn_model_columns <- c("rating", "urlDrugName", "condition", "effectiveness")
-drug_train_tsv <- drug_train_tsv %>%
-  drop_na(any_of(knn_model_columns))
-colnames(drug_train_tsv)
-
-top_drugs <- drug_train_tsv %>%
-  count(urlDrugName, sort = TRUE) %>%
-  slice_head(n = 5) %>%
-  pull(urlDrugName)
-
-top_conditions <- drug_train_tsv %>%
-  count(condition, sort = TRUE) %>%
-  slice_head(n = 5) %>%
-  pull(condition)
-
-kable(top_drugs, caption = "Top 5 Drug Names")
-kable(top_conditions, caption = "Top 5 Conditions")
-```
-
-### KNN Hyperparameter Tuning & Cross-Validation
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table6
@@ -447,86 +425,60 @@ kable(top_conditions, caption = "Top 5 Conditions")
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 6"
 
-library(FNN)
-set.seed(123)
-
-#Turns categorial variables into numeric variables for computation
 drug_train <- drug_train_tsv %>%
   mutate(
-    rating = as.numeric(rating),
-    sentiment = ifelse(rating >= 7, "Positive", "Negative")) 
+    sentiment = factor(ifelse(rating >= 7, 1, 0), levels = c(0, 1))
+  )
 
-#Gets top drugs and conditions
+# Top 10 drugs
+top_drugs <- drug_train_tsv %>%
+  count(urlDrugName, sort = TRUE) %>%
+  slice_head(n = 10) %>%
+  pull(urlDrugName)
+
+# Top 10 conditions
+top_conditions <- drug_train_tsv %>%
+  count(condition, sort = TRUE) %>%
+  slice_head(n = 10) %>%
+  pull(condition)
+
+# Collapse the less common values
 drug_train <- drug_train %>%
   mutate(
-    drug_top = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"), 
-    condition_top = ifelse(condition %in% top_conditions, condition, "Other") 
-  ) %>%
-  mutate(
-    across(c(drug_top, condition_top), ~ as.factor(.)) # Convert to factors
+    top_drugs = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
+    top_conditions = ifelse(condition %in% top_conditions, condition, "Other")
   )
 
-#Scales and encodes the data
-drug_train$rating_scaled <- scale(drug_train$rating)
-drug_train_encode <- model.matrix(~ drug_top + condition_top - 1, data = drug_train)
-train_predictors <- cbind(drug_train$rating_scaled, drug_train_encode)
-train_labels <- factor(drug_train$sentiment)
-knn_control <- trainControl(method = "cv", number = 10)
+# Train and Test set split
+set.seed(42)
+train_ind <- createDataPartition(drug_train$sentiment, p = 0.8, list = FALSE)
+train_set <- drug_train[train_ind, ]
+test_set <- drug_train[-train_ind, ]
 
-#Cross Validation
-knn_cv <- train(
-  x = as.data.frame(train_predictors),
-  y = train_labels, 
-  method = "knn", 
-  trControl = knn_control, 
-  tuneGrid = expand.grid(k = 1:20) 
-  )
+# Encoding
+train_encode <- model.matrix(~ top_drugs + top_conditions - 1, data = train_set)
+test_encode <- model.matrix(~ top_drugs + top_conditions - 1, data = test_set)
 
-plot(knn_cv)
+train_labels <- train_set$sentiment
+test_labels <- test_set$sentiment
+
+knn_pred <- knn(train = train_encode, 
+                test = test_encode, 
+                cl = train_labels, k = 5)
+
+# Evaluate Model
+confusionMatrix(knn_pred, test_labels)
 ```
 
-### KNN Classification
+**True Negatives (TN)** = 129; 129 reviews were predicted negative and actually negative
 
-```{r echo=FALSE, message=FALSE}
-#| label: Table7
-#| fig-cap: "Table 7"
-#| fig-pos: H
-#| fig-height: 5
-#| fig-width: 7
-#| fig-alt: "Table with KNN"
-#| aria-describedby: namesPlotLD
-#| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 7"
+**False Positives (FP)** = 5; 5 reviews were predicted positive but actually negative
 
-plot_data_sentiment <- drug_train %>%
-  select(rating, ...1, sentiment) %>%
-  rename(reviewID = ...1) %>% 
-  drop_na()
+**False Negatives (FN)** = 67; 67 reviews were predicted negative but actually positive
 
-ggplot(data = plot_data_sentiment, aes(x = rating, 
-                                       y = reviewID, 
-                                       color = sentiment)) +
-  geom_point(alpha = 0.6) +
-  labs(title = "Patient Reviews by Rating and Feature", 
-       x = "Patient Rating (1-10)", 
-       y = "Patient ID",
-       color = "Sentiment") + 
-  theme_minimal()
-```
+**True Positives (TP)** = 6; 6 reviews were predicted positive and actually positive
 
-The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains.
-
--   **Cluster 1**: 121 + 190 = 311 data points
-
--   **Cluster 2**: 49 + 44 = 93 data points
-
--   **Cluster 3**: 115 + 33 = 148 data points
-
--   **Cluster 4**: 67 + 58 = 125 data points
-
--   **Cluster 5**: 133 + 226 = 359 data points
-
-**Cluster 5** represents the highest ratings while **Cluster 3** represents the lowest ratings.
+**Total Observations** = 129 + 5 + 67 + 6 = 207 which is the size of the test set.
 
 ## K-means Clustering
 
@@ -588,16 +540,16 @@ To enhance predictive accuracy, future work should address the class imbalance u
 
 ## K-Nearest Neighbors (KNN) Model
 
-### Model Strengths
+**Model Strengths**
 
 -   Phenomenal accuracy of 99.87%
 -   High sensitivity of 99.59%
 
-### Model Weaknesses
+**Model Weaknesses**
 
 When the accuracy is almost too high, it may indicate that the model might be "memorizing" rather than "generalizing.”
 
-### Conclusion
+**Conclusion**
 
 -   The KNN model correctly classified 99.87% of the drug reviews in the dataset.
 
@@ -605,17 +557,17 @@ When the accuracy is almost too high, it may indicate that the model might be "m
 
 ## K-means Clustering Model
 
-### Model Strengths
+**Model Strengths**
 
 -   The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over.
 -   There is a clear separation between the clusters.
 
-### Model Weaknesses
+**Model Weaknesses**
 
 -   The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below.
 -   The model does not guarantee an absolute optimal solution.
 
-### Conclusion
+**Conclusion**
 
 # Discussion
 
