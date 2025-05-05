@@ -218,7 +218,9 @@ The dataset used for this analysis consisted of 2 files: **drugLibTrain_raw.tsv*
 
 To ensure consistency between training and testing datasets, factor levels in the test set were matched to those in the training set. Any rows in the test data with missing values in key features were removed to avoid complications during model prediction. Afterwards, a logistic regression model was fit using the glm() function in R with the binomial family specified. The formula for the model was:
 
-	sentiment \~ urlDrugName + condition + effectiveness
+```         
+sentiment \~ urlDrugName + condition + effectiveness
+```
 
 The model used these 3 features to estimate the probability that a given review was positive. It then generated predicted probabilities on the cleaned test dataset, with a threshold of 0.5. A confusion matrix was also generated to summarize how well the predicted labels matched the actual sentiment values. The model is shown below:
 
@@ -295,7 +297,7 @@ False Negatives (FN) = 48 48 reviews were predicted negative but actually positi
 True Positives (TP) = 537 537 reviews were predicted positive and actually positive
 
 | Metric | Value | Meaning |
-|--------------------|-------------------|---------------------------------|
+|----|----|----|
 | Accuracy | 0.8285 | 82.85% of predictions were correct overall |
 | Sensitivity (Class 0) | 0.6646 | 66.46% of actual negative reviews were correctly identified |
 | Specificity (Class 1) | 0.9179 | 91.79% of actual positive reviews were correctly identified |
