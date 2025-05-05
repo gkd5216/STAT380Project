@@ -507,13 +507,15 @@ To enhance predictive accuracy, future work should address the class imbalance u
 
 ## K-Nearest Neighbors (KNN) Model
 
-According to the confusion matrix, out of 207 test reviews, 129 of them were true negatives and 6 of them were true positives. 5 of them were also false positives and 67 of them were false negatives. This means that 129 reviews were predicted negative and actually were negative, 5 reviews were predicted positive but actually were negative, 67 reviews were predicted negative but were actually positive, and 6 reviews were predicted positive and actually were positive.
+According to the confusion matrix, out of 207 test reviews, 127 of them were true negatives and 7 of them were true positives. 7 of them were also false positives and 66 of them were false negatives. This means that 127 reviews were predicted negative and actually were negative, 7 reviews were predicted positive but actually were negative, 66 reviews were predicted negative but were actually positive, and 7 reviews were predicted positive and actually were positive.
 
-The overall **accuracy** of the model is 0.6522 which means that it correctly classified about 65.22% of the reviews in the test set. There is a **No Information Rate** (NIR) of 0.6473 which represents the accuracy achieved predicting the majority class. On the other hand, the Kappa is very low at 0.0556 which represents only slight agreement between the KNN model's predictions and the actual sentiment. The 'Positive' Class came out as 0
+The overall **accuracy** of the model is 0.6722 which means that it correctly classified about 64.73% of the reviews in the test set. There is a **No Information Rate** (NIR) of 0.6473 which represents the accuracy achieved predicting the majority class. On the other hand, the Kappa is very low at 0.0535 which represents only slight agreement between the KNN model's predictions and the actual sentiment. The sensitivity is low at 9.6%, but the specificity is very high at 94.78% meaning that it correctly identified most of the positive class. The model also has a 95% **Confidence Interval** for the accuracy meaning that if the experiment is repeated multiple times, the true accuracy would most likely fall within this range 95% of the time.
+
+The KNN Model represents a highly imbalanced performance. While it is good at correctly identifying positive reviews with a high specificity, it performs poorly at identifying negative reviews with a low sensitivity.
 
 ## K-means Clustering Model
 
-The k-means clustering model
+The k-means clustering model displays 5 clusters that have reasonable separation between at least 3 of them. The ellipses around each of the clusters indicate the density and spread. Cluster 1-5 can be identified on the right-side legend. Clusters 1 and 2 are relatively compact while Clusters 3 and 4 display some overlap.
 
 # Discussion
 
@@ -521,7 +523,7 @@ The k-means clustering model
 
 **Neural Networks**: excellent at predicting common scores (ex. 10); struggled with rarer or mid-range ratings
 
-**KNN**: correctly classified about 65.22% of the reviews in the test set
+**KNN**: correctly classified about 64.73% of the reviews in the test set. excellent at identifying the positive class, struggled with identifying negative reviews
 
 **K-means Clustering**:
 
