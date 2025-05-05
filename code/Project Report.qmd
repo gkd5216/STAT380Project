@@ -425,7 +425,13 @@ knn_pred <- knn(train = train_encode,
 confusionMatrix(knn_pred, test_labels)
 ```
 
-## K-means Clustering
+## K-means Clustering: Discovery of Patient Review Groups
+
+Can we discover hidden patterns in drug reviews without using labels?
+
+In this section, we explore the underlying patterns in patient satisfaction. We applied K-means clustering to a subset of structured features including the rating, drug name, and condition.
+
+The dataset used was the **drugLibTrain_raw.tsv** file from which we wrangled the data and selected features for the K-means model. Missing values were filtered out of the raw train data. We grouped less frequent occurrences into a category titled "Other" utilizing the top drugs and conditions defined prior.
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table8
@@ -440,25 +446,35 @@ confusionMatrix(knn_pred, test_labels)
 
 library(ggplot2)
 library(factoextra)
-set.seed(123)
 
 drug_kmeans <- drug_train_tsv %>%
-  mutate(rating = as.numeric(rating)) %>%
-  drop_na(rating) %>%
-  select(rating)
+  filter(!is.na(rating), !is.na(urlDrugName), !is.na(condition)) %>%
+  mutate(
+    top_drugs = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
+    top_conditions = ifelse(condition %in% top_conditions, condition, "Other")
+  ) %>%
+  select(rating, top_drugs, top_conditions)
 
-# perform kmeans clustering (k = 5 clusters)
-kmeans_res <- kmeans(drug_kmeans, centers = 5, nstart = 20)
-drug_KMeanClusters <- kmeans_res$cluster
-drug_kmeans$cluster <- as.factor(drug_KMeanClusters)
+train_labels <- as.factor(unlist(train_set$sentiment))
+test_labels <- as.factor(unlist(test_set$sentiment))
 
-#Plot k-means clustering
+# Encodes categorial variables
+kmeans_encoded <- model.matrix(~ top_drugs + top_conditions - 1, data = drug_kmeans)
+kmeans_input <- cbind(scale(drug_kmeans$rating), kmeans_encoded)
+
+# K-means clustering (k = 5 clusters)
 set.seed(123)
-plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k means')
-```
+kmeans_result <- kmeans(kmeans_input, centers = 5, nstart = 25)
+drug_kmeans$cluster <- as.factor(kmeans_result$cluster)
 
-```{r echo=FALSE, message=FALSE}
-table(drug_kmeans)
+# Cluster Plot
+fviz_cluster(list(data = kmeans_input, 
+                  cluster = kmeans_result$cluster),
+             geom = "point",
+             ellipse.type = "norm",
+             ggtheme = theme_minimal()) +
+  labs(title = "K-means Clustering: Discovery of Patient Review Groups")
+
 ```
 
 # Model Interpretations
