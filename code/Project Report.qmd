@@ -37,7 +37,7 @@ This question explores the patterns with machine learning tasks and their effect
 
 We will first be presenting the background of the dataset and related work. Then,
 
-## Background & Related Work
+# Background & Related Work
 
 The **Drug Reviews** dataset provides a useful source of information beyond just the structured clinical trial data, offering insights into the real-world drug effectiveness, side effects, and the overall patient satisfaction. The Health and Medicine field usually leverages techniques from natural languages processing (NLP) and machine learning in order to get the information from patient's textual data and understand it. Prior research has explored the identification of adverse drug reactions using NLP and the analysis of patient sentiments regarding drug experiences.
 
@@ -49,11 +49,11 @@ Furthermore, the application of machine learning with predicting patient sentime
 
 [^2]: Hassan, A., Mohasefi, J.B., & Azar, S. (2025). Predicting Sentiments of Users about Medical Treatments using Pre-trained Large Language Models. Journal of Information Systems Engineering and Management.
 
-## Data Description & Preprocessing
+# Data Description & Preprocessing
 
-### Provenance
+## Provenance
 
-The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^3], explores reviews from patients on specific drugs along with related medical conditions. The reviews and ratings are grouped into reports on the three aspects being the benefits, side effects and overall comment. The data was originally obtained by crawling online pharmaceutical review sites. This dataset is split into 2 tsv files with one being a train set (75%) and the other one being a test set (25%). It contains 4143 instances and 8 features.  
+The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC Irvine Repository [^3], explores reviews from patients on specific drugs along with related medical conditions. The reviews and ratings are grouped into reports on the three aspects being the benefits, side effects and overall comment. The data was originally obtained by crawling online pharmaceutical review sites. This dataset is split into 2 tsv files with one being a train set (75%) and the other one being a test set (25%). It contains 4143 instances and 8 features.
 
 [^3]: Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
@@ -89,9 +89,9 @@ drug_test_tsv <- read_tsv("https://raw.githubusercontent.com/gkd5216/STAT380Proj
 
 ```
 
-### Variable Description
+## Variable Description
 
-The response variable is the patient's overall ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**. 
+The response variable is the patient's overall ratings of the drugs with the negative reviews from **0-6** and the positive reviews from **7-10**.
 
 An example of a **high review's** (Rating = 10) textual review includes the following:
 
@@ -113,24 +113,7 @@ An example of a **low review's** (Rating = 1) textual review includes the follow
 
 -   **commentsReview**: Took one 10 mg pill nightly...
 
-### Data Cleaning and Preprocessing
-
-Contrary to the UC Irvine Repository stating "No Missing Values" for the dataset, there were missing values observed in the text review field including benefitsReview, sideEffectsReview, and commentsReview. We initially used glimpse() to inspect the train and test datasets to possibly find missing values. It did not show any missing values in either dataset, but it did provide us with useful information about the variables such as the data types and structure. 
-
-```{r echo=FALSE, message=FALSE}
-glimpse(drug_train_tsv)
-glimpse(drug_test_tsv)
-```
-
-Only the drug test dataset outputted with a missing value being present, so we figured out what column and row contains this. Then, we figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this. 
-
-```{r echo=FALSE, message=FALSE}
-any(is.na(drug_train_tsv))
-any(is.na(drug_test_tsv))
-colSums(is.na(drug_test_tsv))
-```
-
-Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models. For models such as Logistic Regression and Neural Networks, the structured variables (urlDrugName, condition, effectiveness, sideEffects, rating) were utilized. 
+The variables that we used in our analysis include the following:
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table1
@@ -145,17 +128,12 @@ Beyond handling the missing values, preprocessing steps were tailored based on t
 
 # Summary Statistics grouping by Geographic Area.
 variable_analysis <- data.frame(
-  Variable = c("reviewID", "urlDrugName", "rating", "effectiveness", "sideEffects", "condition", "benefitsReview", 
-               "sideEffectsReview", "commentsReview"),
-  Type = c("Integer", "Categorial", "Integer", "Categorical", "Categorical", "Categorical", 
-           "Categorical", "Categorical", "Categorical"),
+  Variable = c("reviewID", "urlDrugName", "rating", "effectiveness", "sideEffects", "condition"),
+  Type = c("Integer", "Categorial", "Integer", "Categorical", "Categorical", "Categorical"),
   Explanation = c(
     "Review ID",
     "Name of drug",
     "Name of condition",
-    "Patient on benefits",
-    "Patient on side effects",
-    "Overall patient comment",
     "10 star patient rating",
     "5 step side effect rating",
     "5 step effectiveness rating"
@@ -170,7 +148,37 @@ kable(
 
 ```
 
-### Exploratory Data Analysis
+This provides a clear overview of the variable names, data types, and what each variable represents and means.
+
+## Data Cleaning and Preprocessing
+
+Contrary to the UC Irvine Repository stating "No Missing Values" for the dataset, there were missing values observed in the text review field including benefitsReview, sideEffectsReview, and commentsReview. We initially used glimpse() to inspect the train and test datasets to possibly find missing values. It did not show any missing values in either dataset, but it did provide us with useful information about the variables such as the data types and structure.
+
+```{r echo=FALSE, message=FALSE}
+glimpse(drug_train_tsv)
+glimpse(drug_test_tsv)
+```
+
+Only the drug test dataset outputted with a missing value being present, so we figured out which column contains it.
+
+```{r echo=FALSE, message=FALSE}
+any(is.na(drug_train_tsv))
+any(is.na(drug_test_tsv))
+```
+
+Then, we figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this.
+
+```{r echo=FALSE, message=FALSE}
+colSums(is.na(drug_test_tsv))
+```
+
+Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models.
+
+## Exploratory Data Analysis
+
+As we explore the UCI Drug Reviews dataset, we focus on the patterns, trends, relationships between variables, and significant connections to our research question. Our goals include gaining insight on patient reviews and experiences, applying our understanding of machine learning tasks, and implementing model training and evaluation.
+
+Below are two histograms, one for the Train dataset and one for the Test dataset.
 
 ```{r}
 ggplot(drug_train_tsv, aes(x = rating)) +
@@ -182,15 +190,27 @@ ggplot(drug_test_tsv, aes(x = rating)) +
   labs(title = "Distribution of Patient Ratings (Test)", x = "Rating (1-10)", y = "Number of Reviews")
 ```
 
-## Methodology
+Both datasets display left-skewed histograms with the distribution of patient ratings. There are more data points on the right side.
 
-### Data Wrangling
+# Methodology
 
-## Model Results
+## Data Wrangling
 
-### Logistic Regression: Predicting Positive vs. Negative Reviews
+# Model Results
+
+## Logistic Regression: Predicting Positive vs. Negative Reviews
 
 Can we predict if a patient’s review is positive or negative based on their feedback?
+
+In this section, we explore the possibility of predicting the sentiment of a patient’s review – whether positive or negative – based on their feedback about medications. Using a logistic regression model, a popular method in supervised machine learning for binary classification, patterns in patient reviews were analyzed in order to determine their overall sentiment. The main goal was to assess whether features like the name of the drug, condition being treated, and patient’s perceived effectiveness of the medication could provide enough information to make accurate sentiment predictions.
+
+The dataset used for this analysis consisted of 2 files: **drugLibTrain_raw.tsv** and **drugLibTest_raw.tsv**, which includes thousands of patient-generated entries about various aspects of their medication experiences. For data preparation, a new binary target variable named **sentiment** was created. Reviews with a rating of 7 or above were labeled as **positive (1)**, while those with ratings from 1 to 6 were labeled as **negative (0).** This threshold reflects a distinction between satisfied and dissatisfied users. Several categorical variables, like drug name and condition treated, were converted to factors and grouped using frequency-based lumping. For example, only the top 20 most common drug names and conditions were kept as individual factor levels, while less frequent ones were grouped under “Other”. This reduced dimensionality and improved the model’s ability to generalize.
+
+To ensure consistency between training and testing datasets, factor levels in the test set were matched to those in the training set. Any rows in the test data with missing values in key features were removed to avoid complications during model prediction. Afterwards, a logistic regression model was fit using the glm() function in R with the binomial family specified. The formula for the model was:
+
+	sentiment \~ urlDrugName + condition + effectiveness
+
+The model used these 3 features to estimate the probability that a given review was positive. It then generated predicted probabilities on the cleaned test dataset, with a threshold of 0.5. A confusion matrix was also generated to summarize how well the predicted labels matched the actual sentiment values. The model is shown below:
 
 ```{r, message=FALSE, warning=FALSE}
 # Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
@@ -262,7 +282,7 @@ True Positives (TP) = 537 537 reviews were predicted positive and actually posit
 | No Information Rate (NIR) | 0.6471 | 64.71% of reviews in the test set are in the majority class (positive); always guessing the majority class (positive) would be correct 64.71% of the time |
 | McNemar’s Test | p = 3.183e-06 | Suggests a significant difference in types of errors; model is not just guessing randomly |
 
-### Neutral Network: Predicting Ratings with Nuance
+## Neutral Network: Predicting Ratings with Nuance
 
 Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
 
@@ -319,7 +339,7 @@ confusionMatrix(nn_pred, valid_rating)
 | 9     | 2.1%        | 7.4%      | 48.6%             |
 | 10    | 89.9%       | 50.8%     | 81.2%             |
 
-#### **Accuracy**: 0.3981
+### **Accuracy**: 0.3981
 
 -   The model correctly predicted the exact rating about 40% of the time.
 
@@ -335,11 +355,11 @@ confusionMatrix(nn_pred, valid_rating)
 
 -   This indicates fair agreement beyond chance; falls within 0.2-0.4 range.
 
-### KNN (K-Nearest Neighbors)
+## KNN (K-Nearest Neighbors)
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
 
-#### Top 5 Drug Names and Conditions
+### Top 5 Drug Names and Conditions
 
 ```{r}
 knn_model_columns <- c("rating", "urlDrugName", "condition", "effectiveness")
@@ -361,7 +381,7 @@ kable(top_drugs, caption = "Top 5 Drug Names")
 kable(top_conditions, caption = "Top 5 Conditions")
 ```
 
-#### KNN Hyperparameter Tuning & Cross-Validation
+### KNN Hyperparameter Tuning & Cross-Validation
 
 ```{r, message=FALSE}
 library(FNN)
@@ -402,16 +422,16 @@ knn_cv <- train(
 plot(knn_cv)
 ```
 
-#### KNN Classification
+### KNN Classification
 
 ```{r}
 plot_data_sentiment <- drug_train %>%
   select(rating, ...1, sentiment) %>%
-  rename(patientID = ...1) %>% 
+  rename(reviewID = ...1) %>% 
   drop_na()
 
 ggplot(data = plot_data_sentiment, aes(x = rating, 
-                                       y = patientID, 
+                                       y = reviewID, 
                                        color = sentiment)) +
   geom_point(alpha = 0.6) +
   labs(title = "Patient Reviews by Rating and Feature", 
@@ -421,7 +441,21 @@ ggplot(data = plot_data_sentiment, aes(x = rating,
   theme_minimal()
 ```
 
-### K-means Clustering
+The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains.
+
+-   **Cluster 1**: 121 + 190 = 311 data points
+
+-   **Cluster 2**: 49 + 44 = 93 data points
+
+-   **Cluster 3**: 115 + 33 = 148 data points
+
+-   **Cluster 4**: 67 + 58 = 125 data points
+
+-   **Cluster 5**: 133 + 226 = 359 data points
+
+**Cluster 5** represents the highest ratings while **Cluster 3** represents the lowest ratings.
+
+## K-means Clustering
 
 ```{r, message=FALSE}
 library(ggplot2)
@@ -447,81 +481,78 @@ plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k 
 table(drug_kmeans)
 ```
 
-## Model Interpretations
+# Model Interpretations
 
-### Logistic Regression Model
+## Logistic Regression Model
 
-#### Model Strengths
+### Model Strengths
 
 -   High accuracy (82.9%)
 -   Excellent at identifying positive reviews (specificity = 91.8%)
 -   High precision for negative class (precision = 81.5%), so false alarms are limited
 -   Performs much better than guessing the majority class (accuracy \> NIR)
 
-#### Model Weaknesses
+### Model Weaknesses
 
 -   Struggles more with detecting negative reviews (sensitivity = 66.5%)
 -   Misses about 1 in 3 negative reviews
 
-#### Conclusion
+### Conclusion
 
 We can predict whether a patient’s review is positive or negative using machine learning. Our logistic regression model, trained on features such as the drug name, medical condition, and reported effectiveness, achieved an overall accuracy of 82.85%, which was much higher than the no-information rate of 64.71%. The model showed strong performance in identifying positive reviews (specificity = 91.8%) and reasonably good performance for negative reviews (sensitivity = 66.5%). These results indicate that the model can reliably classify overall patient sentiment based on the structured data.
 
 The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment.
 
-### Neural Networks Model
+## Neural Networks Model
 
-#### Model Strengths
+### Model Strengths
 
 -   Performs best on class 10, the most common rating (recall = 89.9%)
 
 -   Moderate sensitivity for Classes 1 and 8, meaning the model is able to detect some negative (1) and mid-range (8) ratings well
 
-#### Model Weaknesses
+### Model Weaknesses
 
 -   Struggles with middle ratings (2-6), very low recall and precision
 
 -   Leans heavily towards the most frequent classes, possibly due to class imbalance within the dataset
 
-#### Conclusion
+### Conclusion
 
 The neutral network model achieves moderate overall accuracy (39.8%) and significantly outperforms baseline guessing. However, it shows a strong bias towards frequent ratings like 10, while struggling to accurately detect rare or mid-range ratings (2-6). Future work or revisions should address the class imbalance to improve performance across all review scores.
 
-### K-Nearest Neighbors (KNN) Model
+## K-Nearest Neighbors (KNN) Model
 
-The clusters are based on their centers, the within-cluster variances, and the number of data points that each one contains.
+### Model Strengths
 
--   **Cluster 1**: 121 + 190 = 311 data points
+-   Phenomenal accuracy of 99.87%
+-   High sensitivity of 99.59%
 
--   **Cluster 2**: 49 + 44 = 93 data points
+### Model Weaknesses
 
--   **Cluster 3**: 115 + 33 = 148 data points
+When the accuracy is almost too high, it may indicate that the model might be "memorizing" rather than "generalizing.”
 
--   **Cluster 4**: 67 + 58 = 125 data points
+### Conclusion
 
--   **Cluster 5**: 133 + 226 = 359 data points
+-   The KNN model correctly classified 99.87% of the drug reviews in the dataset.
 
-**Cluster 5** represents the highest ratings while **Cluster 3** represents the lowest ratings.
+-   The model is effective at distinguishing between the positive and negative drug reviews.
 
-#### Model Strengths
+## K-means Clustering Model
 
-The Circle (**Cluster 1**) and Diamond (**Cluster 5**) clusters perform exceptionally well with ratings 7 and over. There is a clear separation between the clusters.
+### Model Strengths
 
-#### Model Weaknesses
+-   The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over.
+-   There is a clear separation between the clusters.
 
-The Plus (**Cluster 3**), Triangle (**Cluster 2**), and Cross (**Cluster 4**) clusters perform poorly (less than average) with ratings 6 and below. The model does not guarantee an absolute optimal solution.
+### Model Weaknesses
 
-#### Conclusion
+-   The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below.
+-   The model does not guarantee an absolute optimal solution.
 
-### K-means Clustering Model
+### Conclusion
 
-#### Model Strengths
-
-#### Model Weaknesses
-
-#### Conclusion
-
-## Discussion
+# Discussion
 
 **Logistic Regression**: excellent at identifying positive reviews, reasonably good at identifying negative reviews
 
@@ -531,9 +562,9 @@ The Plus (**Cluster 3**), Triangle (**Cluster 2**), and Cross (**Cluster 4**) cl
 
 **K-means Clustering**: clusters 1 & 5 performed the best, clear separation of clusters; clusters 2,3,4 performed worse with ratings 6 and below.
 
-## Conclusion
+# Conclusion
 
-## References
+# References
 
 Gräßer, F., Kallumadi, S., Malberg, H., & Zaunseder, S. (2018). Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning. Proceedings of the 2018 International Conference on Digital Health.
 
@@ -541,7 +572,7 @@ Hassan, A., Mohasefi, J.B., & Azar, S. (2025). Predicting Sentiments of Users ab
 
 Kallumadi, S. & Grer, F. (2018). Drug Reviews (Druglib.com) \[Dataset\]. UCI Machine Learning Repository. https://doi.org/10.24432/C55G6J.
 
-## Code Appendix
+# Code Appendix
 
 ```{r codeAppend, ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
 ```
