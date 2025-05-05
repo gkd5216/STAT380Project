@@ -294,28 +294,6 @@ test_pred_class <- ifelse(test_pred > 0.5, 1, 0)
 confusionMatrix(factor(test_pred_class), factor(test_data_clean$sentiment))
 ```
 
-Confusion Matrix 0 = negative review, 1 = positive review
-
-**True Negatives (TN)** = 212; 212 reviews were predicted negative and actually negative
-
-**False Positives (FP)** = 107; 107 reviews were predicted positive but actually negative
-
-**False Negatives (FN)** = 48; 48 reviews were predicted negative but actually positive
-
-**True Positives (TP)** = 537; 537 reviews were predicted positive and actually positive
-
-| Metric | Value | Meaning |
-|--------------------|-------------------|---------------------------------|
-| Accuracy | 0.8285 | 82.85% of predictions were correct overall |
-| Sensitivity (Class 0) | 0.6646 | 66.46% of actual negative reviews were correctly identified |
-| Specificity (Class 1) | 0.9179 | 91.79% of actual positive reviews were correctly identified |
-| Kappa | 0.6081 | Moderate to strong agreement beyond chance, follows within the “good” range of 0.6-0.8 |
-| Precision (class 0) | 0.8154 | Out of all predicted negative reviews, 81.54% were correct |
-| Negative Predictive Value | 0.8339 | Out of all predicted positive reviews, 83.39% were correct |
-| Balanced Accuracy | 0.7913 | Average of sensitivity and specificity; useful for imbalanced classes |
-| No Information Rate (NIR) | 0.6471 | 64.71% of reviews in the test set are in the majority class (positive); always guessing the majority class (positive) would be correct 64.71% of the time |
-| McNemar’s Test | p = 3.183e-06 | Suggests a significant difference in types of errors; model is not just guessing randomly |
-
 ## Neutral Network: Predicting Ratings with Nuance
 
 Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
@@ -345,7 +323,8 @@ library(dplyr)
 library(forcats)
 
 train_data <- drug_train_tsv %>%
-  select(rating, urlDrugName, condition, effectiveness) 
+  select(rating, urlDrugName, condition, effectiveness) %>%
+  drop_na()
 
 # Treat rating as factor
 train_data$rating <- as.factor(train_data$rating)
@@ -381,38 +360,15 @@ confusionMatrix(nn_pred, valid_rating)
 
 ```
 
-| Class | Sensitivity | Precision | Balanced Accuracy |
-|-------|-------------|-----------|-------------------|
-| 1     | 50.8%       | 64.6%     | 73.9%             |
-| 2     | 0%          | NaN       | 50.0%             |
-| 3     | 13.8%       | 12.9%     | 54.6%             |
-| 4     | 9.5%        | 50.0%     | 54.6%             |
-| 5     | 0%          | 0%        | 49.8%             |
-| 6     | 3.2%        | 7.7%      | 50.6%             |
-| 7     | 27.1%       | 24.4%     | 58.2%             |
-| 8     | 48.6%       | 35.3%     | 64.6%             |
-| 9     | 2.1%        | 7.4%      | 48.6%             |
-| 10    | 89.9%       | 50.8%     | 81.2%             |
-
-**Accuracy**: 0.3981
-
--   The model correctly predicted the exact rating about 40% of the time.
-
-**No Information Rate (NIR)**: 0.2395
-
--   Always guessing the most common rating (10) would be correct about 24% of the time.
-
-**P-value (Accuracy \> NIR)**: \< 2.2e-16
-
--   The model significantly outperforms random guessing or defaulting to the majority class.
-
-**Kappa**: 0.2672
-
--   This indicates fair agreement beyond chance; falls within 0.2-0.4 range.
-
 ## K-Nearest Neighbors (KNN): Predicting Binary Classification
 
 Can we classify the sentiment of a new review based on sentiments of similar past reviews?
+
+In this section, we explore the sentiment of a new review based on similar past reviews with the KNN model as the supervised learning algorithm.
+
+The dataset used was the **drugLibTrain_raw.tsv** file from which a binary sentiment variable was created. This variable assigns a value of 1 (positive sentiment) if the original rating is greater than or equal to 7, and 0 (negative sentiment) if the rating is less than 7. Then, it converts into a factor with explicit levels of 0 and 1 which is essential for classification tasks. The most frequent drugs and conditions in the train data are identified and counted. They are sorted in descending order with the top 10 values. These 2 lists are used to simplify the drug name and condition features to avoid overcrowding. It helps to reduce the dimensionality and complexity of the categorial features.
+
+The dataset is split into training and testing sets in order to evaluate the KNN model's performance on the unseen data. It places 80% into the train set and 20% into the test set. A stratified split is then performed to attempt to keep the proportion of sentiment values around the same in the train and test sets. A design matrix is created for the train and test sets while converting the top drugs and conditions into dummy variables. Integrating -1 ensures that an intercept column is not included in the matrix. Lastly, the classification model is applied with the KNN function before outputted the confusion matrix to evaluate the predictions.
 
 ```{r echo=FALSE, message=FALSE}
 #| label: Table6
@@ -427,8 +383,7 @@ Can we classify the sentiment of a new review based on sentiments of similar pas
 
 drug_train <- drug_train_tsv %>%
   mutate(
-    sentiment = factor(ifelse(rating >= 7, 1, 0), levels = c(0, 1))
-  )
+    sentiment = factor(ifelse(rating >= 7, 1, 0), levels = c(0, 1)))
 
 # Top 10 drugs
 top_drugs <- drug_train_tsv %>%
@@ -469,16 +424,6 @@ knn_pred <- knn(train = train_encode,
 # Evaluate Model
 confusionMatrix(knn_pred, test_labels)
 ```
-
-**True Negatives (TN)** = 129; 129 reviews were predicted negative and actually negative
-
-**False Positives (FP)** = 5; 5 reviews were predicted positive but actually negative
-
-**False Negatives (FN)** = 67; 67 reviews were predicted negative but actually positive
-
-**True Positives (TP)** = 6; 6 reviews were predicted positive and actually positive
-
-**Total Observations** = 129 + 5 + 67 + 6 = 207 which is the size of the test set.
 
 ## K-means Clustering
 
@@ -540,34 +485,21 @@ To enhance predictive accuracy, future work should address the class imbalance u
 
 ## K-Nearest Neighbors (KNN) Model
 
-**Model Strengths**
+According to the confusion matrix, out of 207 test reviews, 129 of them were true negatives and 6 of them were true positives. 5 of them were also false positives and 67 of them were false negatives.
 
--   Phenomenal accuracy of 99.87%
--   High sensitivity of 99.59%
+The overall accuracy of the model is 0.6522 which means that it correctly classified about 65.22% of the reviews in the test set. There is a No Information Rate (NIR) of 0.6473 which represents the accuracy achieved predicting the majority class. On the other hand, the Kappa is very low at 0.0556 which represents only slight agreement between the KNN model's predictions and the actual sentiment.
 
-**Model Weaknesses**
+**True Negatives (TN)** = 129; 129 reviews were predicted negative and actually negative
 
-When the accuracy is almost too high, it may indicate that the model might be "memorizing" rather than "generalizing.”
+**False Positives (FP)** = 5; 5 reviews were predicted positive but actually negative
 
-**Conclusion**
+**False Negatives (FN)** = 67; 67 reviews were predicted negative but actually positive
 
--   The KNN model correctly classified 99.87% of the drug reviews in the dataset.
+**True Positives (TP)** = 6; 6 reviews were predicted positive and actually positive
 
--   The model is effective at distinguishing between the positive and negative drug reviews.
+**Total Observations** = 129 + 5 + 67 + 6 = 207 which is the size of the test set.
 
 ## K-means Clustering Model
-
-**Model Strengths**
-
--   The Circle (Cluster 1) and Diamond (Cluster 5) clusters perform exceptionally well with ratings 7 and over.
--   There is a clear separation between the clusters.
-
-**Model Weaknesses**
-
--   The Plus (Cluster 3), Triangle (Cluster 2), and Cross (Cluster 4) clusters perform poorly (less than average) with ratings 6 and below.
--   The model does not guarantee an absolute optimal solution.
-
-**Conclusion**
 
 # Discussion
 
