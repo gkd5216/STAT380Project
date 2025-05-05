@@ -35,11 +35,11 @@ In this report, we will be exploring the following **research question**:
 
 This question explores the patterns with machine learning tasks and their effectiveness on predicting the satisfaction of patients based on a given class of drug.
 
-We will first be presenting the background of the dataset and related work. Then,
+We will first be presenting the background of the dataset and related work. Then, we will be describing the data and preprocessing. Next, we will be going into detail about the methodology. Then, we will be explaining the results of each machine learning model. Then, we will be explaining our interpretations of each machine learning model. Finally, we will close up the report with a discussion of our findings.
 
 # Background & Related Work
 
-The **Drug Reviews** dataset provides a useful source of information beyond just the structured clinical trial data, offering insights into the real-world drug effectiveness, side effects, and the overall patient satisfaction. The Health and Medicine field usually leverages techniques from natural languages processing (NLP) and machine learning in order to get the information from patient's textual data and understand it. Prior research has explored the identification of adverse drug reactions using NLP and the analysis of patient sentiments regarding drug experiences.
+The ***Drug Reviews*** dataset provides a useful source of information beyond just the structured clinical trial data, offering insights into the real-world drug effectiveness, side effects, and the overall patient satisfaction. The Health and Medicine field usually leverages techniques from natural languages processing (NLP) and machine learning in order to get the information from patient's textual data and understand it. Prior research has explored the identification of adverse drug reactions using NLP and the analysis of patient sentiments regarding drug experiences.
 
 The first piece of related work is the introductory paper for the Drug Reviews dataset is titled **Aspect-Based Sentiment Analysis of Drug Reviews Applying Cross-Domain and Cross-Data Learning** [^1] by F. Gräßer, S. Kallumadi, H. Malberg, and S. Zaunseder. This research paper demonstrated the applicability of sentiment analysis to drug reviews. This includes classifying the overall patient satisfaction and investigating the challenges with data limitations and transferring models across various domains and data sources.
 
@@ -180,7 +180,17 @@ As we explore the UCI Drug Reviews dataset, we focus on the patterns, trends, re
 
 Below are two histograms, one for the Train dataset and one for the Test dataset.
 
-```{r}
+```{r echo=FALSE, message=FALSE}
+#| label: Table2
+#| fig-cap: "Table 2"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Histograms"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 2"
+
 ggplot(drug_train_tsv, aes(x = rating)) +
   geom_histogram(binwidth = 1, fill = "blue", color = "black") +
   labs(title = "Distribution of Patient Ratings (Train)", x = "Rating (1-10)", y = "Number of Reviews")
@@ -190,11 +200,11 @@ ggplot(drug_test_tsv, aes(x = rating)) +
   labs(title = "Distribution of Patient Ratings (Test)", x = "Rating (1-10)", y = "Number of Reviews")
 ```
 
-Both datasets display left-skewed histograms with the distribution of patient ratings. There are more data points on the right side.
+Both datasets display left-skewed histograms with the distribution of patient ratings as there are more data points on the right side.
 
 # Methodology
 
-## Data Wrangling
+We used four machine learning models which are Logistic Regression, Neural Networks, K-Nearest Neighbors (KNN), and K-means Clustering.
 
 # Model Results
 
@@ -212,44 +222,59 @@ To ensure consistency between training and testing datasets, factor levels in th
 
 The model used these 3 features to estimate the probability that a given review was positive. It then generated predicted probabilities on the cleaned test dataset, with a threshold of 0.5. A confusion matrix was also generated to summarize how well the predicted labels matched the actual sentiment values. The model is shown below:
 
-```{r, message=FALSE, warning=FALSE}
+```{r echo=FALSE, message=FALSE}
+#| label: Table3
+#| fig-cap: "Table 3"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Confusion Matrix"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 3"
 # Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
 
-drug_train <- drug_train_tsv %>%
+library(tidyverse)
+library(readr)
+library(caret)
+library(forcats)
+
+# Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
+train_data <- drug_train_tsv %>%
   mutate(sentiment = ifelse(rating >= 7, 1, 0))
 
-drug_test <- drug_test_tsv %>%
+test_data <- drug_test_tsv %>%
   mutate(sentiment = ifelse(rating >= 7, 1, 0))
 
-drug_train <- drug_train %>%
+train_data <- train_data %>%
   mutate(across(c(urlDrugName, condition, effectiveness), as.factor))
 
-drug_test <- drug_test %>%
+test_data <- test_data %>%
   mutate(across(c(urlDrugName, condition, effectiveness), as.factor))
 
-drug_train <- drug_train %>%
+train_data <- train_data %>%
   mutate(urlDrugName = fct_lump(urlDrugName, n = 20),
          condition = fct_lump(condition, n = 20),
          effectiveness = fct_lump(effectiveness, n = 5))
 
 # Match levels in test data to training data
-drug_test <- drug_test %>%
+test_data <- test_data %>%
   mutate(urlDrugName = fct_lump(urlDrugName, n = 20),
          condition = fct_lump(condition, n = 20),
          effectiveness = fct_lump(effectiveness, n = 5))
 
 # Align factor levels
-drug_test$urlDrugName <- factor(drug_test$urlDrugName, levels = levels(drug_train$urlDrugName))
-drug_test$condition <- factor(drug_test$condition, levels = levels(drug_train$condition))
-drug_test$effectiveness <- factor(drug_test$effectiveness, levels = levels(drug_train$effectiveness))
+test_data$urlDrugName <- factor(test_data$urlDrugName, levels = levels(train_data$urlDrugName))
+test_data$condition <- factor(test_data$condition, levels = levels(train_data$condition))
+test_data$effectiveness <- factor(test_data$effectiveness, levels = levels(train_data$effectiveness))
 
 # Remove rows with NAs
-test_data_clean <- drug_test %>%
+test_data_clean <- test_data %>%
   filter(!is.na(urlDrugName) & !is.na(condition) & !is.na(effectiveness))
 
 # Logistic regression model
 logit_model <- glm(sentiment ~ urlDrugName + condition + effectiveness,
-                   data = drug_train, family = "binomial")
+                   data = train_data, family = "binomial")
 
 # Predict on clean test data
 test_pred <- predict(logit_model, newdata = test_data_clean, type = "response")
@@ -257,7 +282,6 @@ test_pred_class <- ifelse(test_pred > 0.5, 1, 0)
 
 # Confusion matrix
 confusionMatrix(factor(test_pred_class), factor(test_data_clean$sentiment))
-
 ```
 
 Confusion Matrix 0 = negative review, 1 = positive review
@@ -286,16 +310,33 @@ True Positives (TP) = 537 537 reviews were predicted positive and actually posit
 
 Can we predict a more nuanced outcome of the review based on patient attributes, dosage, and drug features?
 
-```{r}
+```{r echo=FALSE, message=FALSE}
+#| label: Table4
+#| fig-cap: "Table 4"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Confusion Matrix"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 4"
+
+library(tidyverse)
+library(readr)
+library(nnet)
+library(caret)
+library(dplyr)
+library(forcats)
+
 # Drop NAs
-drug_train <- drug_train_tsv %>%
+train_data <- drug_train_tsv %>%
   select(rating, urlDrugName, condition, effectiveness) %>%
   drop_na()
 
 # Treat rating as factor
-drug_train$rating <- as.factor(drug_train$rating)
+train_data$rating <- as.factor(train_data$rating)
 
-drug_train <- drug_train %>%
+train_data <- train_data %>%
   mutate(
     urlDrugName = fct_lump(urlDrugName, n = 20),
     condition = fct_lump(condition, n = 20),
@@ -304,9 +345,9 @@ drug_train <- drug_train %>%
 
 # Split into training and validation sets
 set.seed(42)
-split_index <- createDataPartition(drug_train$rating, p = 0.8, list = FALSE)
-train_set <- drug_train[split_index, ]
-valid_set <- drug_train[-split_index, ]
+split_index <- createDataPartition(train_data$rating, p = 0.8, list = FALSE)
+train_set <- train_data[split_index, ]
+valid_set <- train_data[-split_index, ]
 
 # Train the neural network model
 nn_model <- nnet(rating ~ urlDrugName + condition + effectiveness,
@@ -361,7 +402,17 @@ Can we classify the sentiment of a new review based on sentiments of similar pas
 
 ### Top 5 Drug Names and Conditions
 
-```{r}
+```{r echo=FALSE, message=FALSE}
+#| label: Table5
+#| fig-cap: "Table 5"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Table with Top Drugs and Conditions"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 5"
+
 knn_model_columns <- c("rating", "urlDrugName", "condition", "effectiveness")
 drug_train_tsv <- drug_train_tsv %>%
   drop_na(any_of(knn_model_columns))
@@ -383,7 +434,17 @@ kable(top_conditions, caption = "Top 5 Conditions")
 
 ### KNN Hyperparameter Tuning & Cross-Validation
 
-```{r, message=FALSE}
+```{r echo=FALSE, message=FALSE}
+#| label: Table6
+#| fig-cap: "Table 6"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Table with KNN"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 6"
+
 library(FNN)
 set.seed(123)
 
@@ -424,7 +485,17 @@ plot(knn_cv)
 
 ### KNN Classification
 
-```{r}
+```{r echo=FALSE, message=FALSE}
+#| label: Table7
+#| fig-cap: "Table 7"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Table with KNN"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 7"
+
 plot_data_sentiment <- drug_train %>%
   select(rating, ...1, sentiment) %>%
   rename(reviewID = ...1) %>% 
@@ -457,7 +528,17 @@ The clusters are based on their centers, the within-cluster variances, and the n
 
 ## K-means Clustering
 
-```{r, message=FALSE}
+```{r echo=FALSE, message=FALSE}
+#| label: Table8
+#| fig-cap: "Table 8"
+#| fig-pos: H
+#| fig-height: 5
+#| fig-width: 7
+#| fig-alt: "Table with K-means"
+#| aria-describedby: namesPlotLD
+#| lst-label: lst-figure2
+#| lst-cap: "Code Chunk for Making Figure 8"
+
 library(ggplot2)
 library(factoextra)
 set.seed(123)
@@ -477,7 +558,7 @@ set.seed(123)
 plot(drug_kmeans, pch = kmeans_res$cluster, col = kmeans_res$cluster, main = 'k means')
 ```
 
-```{r}
+```{r echo=FALSE, message=FALSE}
 table(drug_kmeans)
 ```
 
@@ -485,41 +566,23 @@ table(drug_kmeans)
 
 ## Logistic Regression Model
 
-### Model Strengths
+According to the confusion matrix, out of 3107 test reviews, 1716 were true positives (correctly predicted positive reviews), and 548 were true negatives (correctly predicted negative reviews). However, there were also 305 false positives and 121 false negatives. The model’s overall **accuracy** was 82.85%, indicating that it correctly predicted sentiment in over 4 out of 5 cases. This accuracy significantly outperformed the **No Information Rate** of 64.71%, which reflects the accuracy that results from predicting the majority class (positive sentiment) every time.
 
--   High accuracy (82.9%)
--   Excellent at identifying positive reviews (specificity = 91.8%)
--   High precision for negative class (precision = 81.5%), so false alarms are limited
--   Performs much better than guessing the majority class (accuracy \> NIR)
+Additional performance metrics provided further insight into the model’s strengths and limitations. The **specificity**, or true positive rate, for classifying positive reviews was particularly high at 91.79%, demonstrating that the model excelled at recognizing satisfied patients. The **precision** for the negative class was also strong at 81.54%, meaning most reviews predicted as negative were actually negative. However, the **sensitivity** for negative reviews was lower at 66.46%, indicating that about ⅓ of actual negative reviews were missed, often misclassified as positive. This imbalance suggests that the model may be biased toward the more frequent positive class, a common issue in sentiment classification where one class dominates the dataset. Nonetheless, the **balanced accuracy**, or average of sensitivity and specificity, was 79.13%, indicating good performance across both classes.
 
-### Model Weaknesses
-
--   Struggles more with detecting negative reviews (sensitivity = 66.5%)
--   Misses about 1 in 3 negative reviews
-
-### Conclusion
-
-We can predict whether a patient’s review is positive or negative using machine learning. Our logistic regression model, trained on features such as the drug name, medical condition, and reported effectiveness, achieved an overall accuracy of 82.85%, which was much higher than the no-information rate of 64.71%. The model showed strong performance in identifying positive reviews (specificity = 91.8%) and reasonably good performance for negative reviews (sensitivity = 66.5%). These results indicate that the model can reliably classify overall patient sentiment based on the structured data.
-
-The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment.
+The logistic regression model achieved an overall accuracy of 82.85%, which significantly outperforms the no-information rate of 64.71% (p \< 2.2e-16). It performs well in identifying positive reviews (specificity = 91.8%) but is less sensitive to negative reviews (sensitivity = 66.5%). The balanced accuracy of 79.1% confirms that the model maintains reasonable performance across both classes. The confusion matrix and McNemar's test (p = 3.18e-06) further indicate that the model is not biased toward one class and captures meaningful patterns in patient review sentiment. This result, coupled with high specificity and balanced accuracy, supports the conclusion that machine learning methods can be used to reliably classify the sentiment of patient reviews, making them valuable tools for summarizing large-scale patient feedback in clinical settings.
 
 ## Neural Networks Model
 
-### Model Strengths
+The neural network model achieved an overall **accuracy** of 39.8%, indicating that it correctly predicted the exact review rating in just under four out of ten cases. While this result is significantly better than the **No Information Rate** (23.95%), it still reflects modest predictive performance for a ten-class classification problem. The model performed particularly well on the most frequent class—rating 10—correctly identifying nearly 90% of these cases, which heavily influenced the overall accuracy. However, such strong performance on a single class also highlights the model's reliance on class frequency over a balanced understanding of all outcomes.
 
--   Performs best on class 10, the most common rating (recall = 89.9%)
+A closer look at class-specific metrics reveals that the model struggled to generalize beyond the most common ratings. Classes such as **2, 5, and 9** had extremely low or zero recall, meaning they were rarely, if ever, predicted. Other mid-range scores like **3, 4, and 6** had recall rates below 15%, paired with low precision, indicating that the model could not effectively learn the distinctions between similar ratings. Only a few classes—**rating 1** (sensitivity = 50.8%)and **rating 8** (sensitivity = 48.6%)—showed moderate performance. This skewed behavior is typical in highly imbalanced datasets where dominant classes overwhelm signals for underrepresented ones.
 
--   Moderate sensitivity for Classes 1 and 8, meaning the model is able to detect some negative (1) and mid-range (8) ratings well
+Although the model's architecture was likely enough to avoid overfitting, its limited depth and capacity may have constrained its ability to capture relationships between inputs and outputs. Additionally, the structured features—drug name, condition, and effectiveness—do not provide enough detail to distinguish between numerically close ratings (e.g., a 5 vs. a 6). Without richer data or more informative inputs, the neural network had little basis for making nuanced predictions across a wide range of review scores.
 
-### Model Weaknesses
+In conclusion, the neural network model demonstrated partial effectiveness, especially in predicting high-frequency ratings like 10, but performed poorly across the rest of the rating scale. The low recall and precision for most classes suggest that the model failed to learn adequate class-specific patterns, likely due to a combination of class imbalance, limited feature diversity, and insufficient complexity in the model. Despite achieving better-than-random performance, the model’s real-world utility is limited if it cannot reliably predict ratings across the full spectrum.
 
--   Struggles with middle ratings (2-6), very low recall and precision
-
--   Leans heavily towards the most frequent classes, possibly due to class imbalance within the dataset
-
-### Conclusion
-
-The neutral network model achieves moderate overall accuracy (39.8%) and significantly outperforms baseline guessing. However, it shows a strong bias towards frequent ratings like 10, while struggling to accurately detect rare or mid-range ratings (2-6). Future work or revisions should address the class imbalance to improve performance across all review scores.
+To enhance predictive accuracy, future work should address the class imbalance using resampling or different learning techniques. Additionally, the feature space should include more descriptive variables—such as dosage, side effects, or even natural language processing (NLP) features extracted from written reviews. With a richer dataset and more comprehensive model architecture, the system could better capture the subtle factors that influence patient ratings, leading to more reliable and informative predictions.
 
 ## K-Nearest Neighbors (KNN) Model
 
