@@ -224,15 +224,15 @@ sentiment \~ urlDrugName + condition + effectiveness
 The model used these 3 features to estimate the probability that a given review was positive. It then generated predicted probabilities on the cleaned test dataset, with a threshold of 0.5. A confusion matrix was also generated to summarize how well the predicted labels matched the actual sentiment values. The model is shown below:
 
 ```{r echo=FALSE, message=FALSE}
-#| label: Table3
-#| fig-cap: "Table 3"
+#| label: LRConfusionMatrix
+#| fig-cap: "Logistic Regression Confusion Matrix"
 #| fig-pos: H
 #| fig-height: 5
 #| fig-width: 7
-#| fig-alt: "Confusion Matrix"
+#| fig-alt: "Table showing Logistic Regression Confusion Matrix"
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 3"
+#| lst-cap: "Code Chunk for Making Figure 1"
 
 # Import necessary libraries
 library(tidyverse)
@@ -296,15 +296,15 @@ The dataset used was the **drugLibTrain_raw.tsv** file, from which a subset of r
 The cleaned dataset was split into training and testing sets using an 80/20 stratified split, preserving the distribution of review scores across both sets. A feedforward neural network model was trained using the nnet package in R. The network architecture included a single hidden layer with 5 neurons, and the model was trained over 200 iterations. The predictors used were **urlDrugName, condition,** and **effectiveness**, all treated as categorical inputs. After training, the model was applied to the testing set, and predictions were evaluated against the actual review scores using a confusion matrix and class-wise performance metrics.
 
 ```{r echo=FALSE, message=FALSE}
-#| label: Table4
-#| fig-cap: "Table 4"
+#| label: NNConfusionMatrix
+#| fig-cap: "Neural Networks Confusion Matrix"
 #| fig-pos: H
 #| fig-height: 5
 #| fig-width: 7
-#| fig-alt: "Confusion Matrix"
+#| fig-alt: "Table showing Neural Networks Confusion Matrix"
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 4"
+#| lst-cap: "Code Chunk for Making Figure 1"
 
 # Import necessary libraries
 library(tidyverse)
@@ -364,15 +364,15 @@ The dataset used was the **drugLibTrain_raw.tsv** file from which a binary senti
 The dataset is split into training and testing sets in order to evaluate the KNN model's performance on the unseen data. It places 80% into the train set and 20% into the test set. A stratified split is then performed to attempt to keep the proportion of sentiment values around the same in the train and test sets. A design matrix is created for the train and test sets while converting the top drugs and conditions into dummy variables. Integrating -1 ensures that an intercept column is not included in the matrix. Lastly, the classification model is applied with the KNN function before outputted the confusion matrix to evaluate the predictions.
 
 ```{r echo=FALSE, message=FALSE}
-#| label: Table6
-#| fig-cap: "Table 6"
+#| label: KNNConfusionMatrix
+#| fig-cap: "KNN Confusion Matrix"
 #| fig-pos: H
 #| fig-height: 5
 #| fig-width: 7
-#| fig-alt: "Table with KNN"
+#| fig-alt: "Table showing KNN Confusion Matrix"
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 6"
+#| lst-cap: "Code Chunk for Making Figure 1"
 
 # Import necessary libraries
 library(class)
@@ -437,15 +437,15 @@ In this section, we explore the underlying patterns in patient satisfaction. We 
 The dataset used was the **drugLibTrain_raw.tsv** file from which we wrangled the data and selected features for the K-means model. Missing values were filtered out of the raw train data. We grouped less frequent occurrences into a category titled "Other" utilizing the top drugs and conditions defined prior. It selects the rating, top_drugs, and top_conditions variables that will be used as the input features for the k-means clustering algorithm. Model.matrix is used to perform one-hot encoding and creating dummy variables for each level of top_drugs and top_conditions. The numerical rating variable is then processed using scale() and performing standardization. After scaling, its combined (cbind) with the encoded categorical variables to create kmeans_input. Setting the seed then ensures the initialization of the algorithm being reproducible. The core k-means algorithm is run and the cluster assignments are added as a new column. The code then visualizes the clustering results.
 
 ```{r echo=FALSE, message=FALSE}
-#| label: Table8
-#| fig-cap: "Table 8"
+#| label: KMeansConfusionMatrix
+#| fig-cap: "K-Means Confusion Matrix"
 #| fig-pos: H
 #| fig-height: 5
 #| fig-width: 7
-#| fig-alt: "Table with K-means"
+#| fig-alt: "Table showing K-Means Confusion Matrix"
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 8"
+#| lst-cap: "Code Chunk for Making Figure 1"
 
 # Import necessary libraries
 library(ggplot2)
