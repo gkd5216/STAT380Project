@@ -60,15 +60,6 @@ The dataset used for this analysis, the ***Drug Reviews*** dataset from the UC I
 **Source**: [Drug Effects Data](https://archive.ics.uci.edu/dataset/461/drug+review+dataset+druglib+com).
 
 ```{r echo=FALSE, message=FALSE}
-#| label: Table0
-#| fig-cap: "Dataset"
-#| fig-pos: H
-#| fig-height: 5
-#| fig-width: 7
-#| fig-alt: "Drug Reviews dataset"
-#| aria-describedby: namesPlotLD
-#| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for importing dataset"
 
 #Load necessary libraries
 library(dplyr) #data manipulation
@@ -115,9 +106,9 @@ An example of a **low review's** (Rating = 1) textual review includes the follow
 
 The variables that we used in our analysis include the following:
 
-```{r echo=FALSE, message=FALSE}
-#| label: Table1
-#| fig-cap: "Table 1"
+```{r echo=FALSE}
+#| label: VariableDescription
+#| fig-cap: "Variable Description"
 #| fig-pos: H
 #| fig-height: 5
 #| fig-width: 7
@@ -154,25 +145,25 @@ This provides a clear overview of the variable names, data types, and what each 
 
 Contrary to the UC Irvine Repository stating "No Missing Values" for the dataset, there were missing values observed in the text review field including benefitsReview, sideEffectsReview, and commentsReview. We initially used glimpse() to inspect the train and test datasets to possibly find missing values. It did not show any missing values in either dataset, but it did provide us with useful information about the variables such as the data types and structure.
 
-```{r echo=FALSE, message=FALSE}
+```{r echo=FALSE}
 glimpse(drug_train_tsv)
 glimpse(drug_test_tsv)
 ```
 
-Only the drug test dataset outputted with a missing value being present, so we figured out which column contains it.
+We then examined both the train and test sets to see where the missing values were, and if we could eliminate any. Below is the output for the train and test datasets respectively.
 
 ```{r echo=FALSE, message=FALSE}
 any(is.na(drug_train_tsv))
 any(is.na(drug_test_tsv))
 ```
 
-Then, we figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this.
+Only the drug test dataset outputted with a missing value being present, so we figured out which column contains it. Then, we examined which columns in the test dataset had missing values using colSums.
 
 ```{r echo=FALSE, message=FALSE}
 colSums(is.na(drug_test_tsv))
 ```
 
-Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models.
+We figured out that the commentsReview column contains 1 missing value, but it is not specifically an N/A column. It states "N/A currently," so it did not seem necessary to take care of this. Beyond handling the missing values, preprocessing steps were tailored based on the needs of the various machine learning models.
 
 ## Exploratory Data Analysis
 
@@ -180,16 +171,16 @@ As we explore the UCI Drug Reviews dataset, we focus on the patterns, trends, re
 
 Below are two histograms, one for the Train dataset and one for the Test dataset.
 
-```{r echo=FALSE, message=FALSE}
-#| label: Table2
-#| fig-cap: "Table 2"
+```{r echo=FALSE}
+#| label: ExploratoryDataAnalysis
+#| fig-cap: "Exploratory Data Analysis"
 #| fig-pos: H
 #| fig-height: 5
 #| fig-width: 7
-#| fig-alt: "Histograms"
+#| fig-alt: "Table showing Exploratory Data Analysis"
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
-#| lst-cap: "Code Chunk for Making Figure 2"
+#| lst-cap: "Code Chunk for Making Figure 1"
 
 ggplot(drug_train_tsv, aes(x = rating)) +
   geom_histogram(binwidth = 1, fill = "blue", color = "black") +
@@ -212,7 +203,7 @@ We chose to use four machine learning models which are **Logistic Regression**, 
 
 **K-Nearest Neighbors (KNN)** is a supervised learning model that is used for classification. It can be used for regression and classification tasks. It aims to classify the sentiment of a new drug review based on similar past patient reviews. The main idea is that to predict the response for a new observation, you find the k observations in the Train dataset that are nearest to the new observation.
 
-**K-means Clustering**
+**K-means Clustering** is an unsupervised learning model. It is used to discover hidden or underlying patterns and groupings in the data without using labels. It aims to identify the clusters of patient experiences with specific drugs along with uncovering underlying patterns in patient satisfaction. We also aim to find groups of reviews with similar properties.
 
 # Model Results
 
@@ -242,8 +233,8 @@ The model used these 3 features to estimate the probability that a given review 
 #| aria-describedby: namesPlotLD
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 3"
-# Create binary sentiment variable: 1 (positive w/ rating 7–10), 0 (negative w/ rating 1–6)
 
+# Import necessary libraries
 library(tidyverse)
 library(readr)
 library(caret)
@@ -315,6 +306,7 @@ The cleaned dataset was split into training and testing sets using an 80/20 stra
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 4"
 
+# Import necessary libraries
 library(tidyverse)
 library(readr)
 library(nnet)
@@ -322,6 +314,7 @@ library(caret)
 library(dplyr)
 library(forcats)
 
+# Groups by rating, drug names, conditions, and effectiveness
 train_data <- drug_train_tsv %>%
   select(rating, urlDrugName, condition, effectiveness) %>%
   drop_na()
@@ -381,11 +374,12 @@ The dataset is split into training and testing sets in order to evaluate the KNN
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 6"
 
+# Import necessary libraries
 library(class)
 library(FactoMineR)
 
+# Factor the sentiments
 drug_train <- drug_train_tsv %>%
-  filter(!is.na(rating), !is.na(urlDrugName), !is.na(condition)) %>%
   mutate(
     sentiment = factor(ifelse(rating >= 7, 1, 0), levels = c(0, 1)))
 
@@ -400,7 +394,7 @@ top_conditions <- drug_train %>%
   slice_head(n = 30) %>%
   pull(condition)
 
-# Recode less common ones as "Other"
+# Recode less common ones as titled "Other"
 drug_model <- drug_train %>%
   mutate(
     drug_group = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
@@ -427,7 +421,10 @@ train_y <- train_set$sentiment
 test_y <- test_set$sentiment
 
 # Run KNN
-knn_pred <- knn(train = train_x, test = test_x, cl = train_y, k = 5)
+knn_pred <- knn(train = train_x, 
+                test = test_x, 
+                cl = train_y, k = 5)
+
 confusionMatrix(knn_pred, test_y)
 ```
 
@@ -450,17 +447,19 @@ The dataset used was the **drugLibTrain_raw.tsv** file from which we wrangled th
 #| lst-label: lst-figure2
 #| lst-cap: "Code Chunk for Making Figure 8"
 
+# Import necessary libraries
 library(ggplot2)
 library(factoextra)
 
+# Groups by ratings, top drugs, and top conditions
 drug_kmeans <- drug_train_tsv %>%
-  filter(!is.na(rating), !is.na(urlDrugName), !is.na(condition)) %>%
   mutate(
     top_drugs = ifelse(urlDrugName %in% top_drugs, urlDrugName, "Other"),
     top_conditions = ifelse(condition %in% top_conditions, condition, "Other")
   ) %>%
   select(rating, top_drugs, top_conditions)
 
+# Factors the labels
 train_labels <- as.factor(unlist(train_set$sentiment))
 test_labels <- as.factor(unlist(test_set$sentiment))
 
@@ -468,7 +467,7 @@ test_labels <- as.factor(unlist(test_set$sentiment))
 kmeans_encoded <- model.matrix(~ top_drugs + top_conditions - 1, data = drug_kmeans)
 kmeans_input <- cbind(scale(drug_kmeans$rating), kmeans_encoded)
 
-# K-means clustering (k = 5 clusters)
+# K-means clustering with 5 clusters
 set.seed(123)
 kmeans_result <- kmeans(kmeans_input, centers = 5, nstart = 25)
 drug_kmeans$cluster <- as.factor(kmeans_result$cluster)
@@ -478,6 +477,8 @@ fviz_cluster(list(data = kmeans_input,
                   cluster = kmeans_result$cluster),
              geom = "point",
              ellipse.type = "norm",
+             repel = TRUE, #Avoid overclustering
+             palette = "lancet", #Soft pastel 
              ggtheme = theme_minimal()) +
   labs(title = "K-means Clustering: Discovery of Patient Review Groups")
 
@@ -515,7 +516,11 @@ The KNN Model represents a highly imbalanced performance. While it is good at co
 
 ## K-means Clustering Model
 
-The k-means clustering model displays 5 clusters that have reasonable separation between at least 3 of them. The ellipses around each of the clusters indicate the density and spread. Cluster 1-5 can be identified on the right-side legend. Clusters 1 and 2 are relatively compact while Clusters 3 and 4 display some overlap.
+The K-means Clustering model displays the discovery of patient review groups. It includes 5 clusters that are shown with normal ellipses.
+
+The first two principal components captured only 6.1% of the variance which is quite low. This suggests that the drug reviews dataset has a complex structure that cannot be fully visualized in two dimensions; however, the PCA plot outputted some useful information. Cluster 4 had the widest spread which represents a greater diversity in the patient experiences. Cluster 2 had a tightly grouped cluster which represents reviews with similar characteristics. Clusters 1 and 5 had an overlapping cluster which represents shared features. Lastly, Cluster 3 showed a compact and separate cluster which possibly represents a consistent trend of patient satisfaction, either high or low.
+
+The K-means Clustering model displayed that patient satisfaction is influenced by the combinations of the medication and the condition that is being treated, and not just by the ratings. Some of the clusters likely would correspond to the reviews of popularly prescribed drugs with a predictable effectiveness, such as Pain Killers or Tylenol. The trends shown suggest that an unsupervised learning model (K-means) can uncover meaningful subgroups in healthcare and medicine. This could potentially uplift future segmentation or a follow-up analysis.
 
 # Discussion
 
@@ -526,6 +531,8 @@ The **neural network** model provided a more detailed approach by attempting to 
 On the other hand, the **K-Nearest Neighbors (KNN)** model showed modest predictive ability with an overall accuracy of 65.2%, just slightly better than the No Information Rate of 64.7%. The model's low Kappa value of 0.0556 indicates minimal agreement between predicted and actual sentiments, revealing the model’s overreliance on majority class predictions. The confusion matrix further showed an imbalanced performance, with the model correctly identifying a large number of negative reviews but failing to capture most of the positive ones. This result illustrates a common limitation of KNN in classification problems: while easy to implement, it can “memorize” the training data rather than learn general patterns, especially when the feature space is limited and imbalanced.
 
 Lastly, **K-means clustering**, as an unsupervised method, offered another perspective by uncovering hidden groupings in the dataset. While it does not predict ratings or sentiments directly, it helped identify clusters of reviews with similar properties. Clusters 1 and 5 emerged as the most distinct and informative, strongly associated with higher patient ratings. On the other hand, clusters 2, 3, and 4 showed more mixed or lower ratings, suggesting potential for identifying patient subgroups with dissatisfaction profiles. Though clustering lacks the interpretability of supervised models, its strength lies in pattern discovery and could inform future strategies for targeted analysis.
+
+A significant challenge in this project was being able to manage the high dimensionality and complexity of the dataset. This specifically relates to modeling drug names and conditions which involved many unique values. We needed to perform careful feature engineering and dimensional reduction to ensure that the models were stable and interpretable.
 
 # Conclusion
 
